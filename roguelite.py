@@ -7,9 +7,7 @@ SCREEN_HEIGHT = 50
 #size of the map
 MAP_WIDTH = 80
 MAP_HEIGHT = 45
- 
-LIMIT_FPS = 20  #20 frames-per-second maximum
- 
+
  
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_dark_ground = libtcod.Color(50, 50, 150)
@@ -23,7 +21,38 @@ class Tile:
         #by default, if a tile is blocked, it also blocks sight
         if block_sight is None: block_sight = blocked
         self.block_sight = block_sight
+		
+class Combat:
+	#a class containing logic necessary to run during the combat state
+		
+class Script:
+	#a script/ or story (basically an event) is a class that contains logic necessary for running a Landmark in the text adventure state,
+	#or a landmark and its encounter in text adventure state
+		
+class Encounter:
+	#encounter has to be just data
+	#
+	#encounter has a collection of objects which can be carried between landmarks to make the text events more variable
+	#
+	#encounter will likely need a subset of it's objects to be defined as combatants, since these objects will trigger the combat state
  
+ class Landmark(Object):
+	#a location on the map that you can enter
+	def __init__(self, x, y, char, color, name, objects, event)
+		Object.__init__(self, x, y, char, color)
+		self.name = name
+		self.objects = objects
+		self.event = event
+		
+	def update(self):
+		for object in objects
+			if Object.collide(self, object)
+				#run event if available
+				self.runEvent(self)
+								
+					
+	
+	
 class Object:
     #this is a generic object: the player, a monster, an item, the stairs...
     #it's always represented by a character on screen.
@@ -39,6 +68,11 @@ class Object:
             self.x += dx
             self.y += dy
  
+	def update(self):
+		for object in objects
+			if collide(self, object)
+			######Do something
+ 
     def draw(self):
         #set the color and then draw the character that represents this object at its position
         libtcod.console_set_default_foreground(con, self.color)
@@ -48,7 +82,10 @@ class Object:
         #erase the character that represents this object
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
  
- 
+	def collide(self, object)
+		if self.y == object.y and self.x == object.x:
+			return True
+		else return False
  
 def make_map():
     global map
@@ -147,3 +184,5 @@ while not libtcod.console_is_window_closed():
     exit = handle_keys()
     if exit:
         break
+		
+raw_input("PRESS ENTER")
