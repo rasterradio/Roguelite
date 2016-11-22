@@ -38,25 +38,51 @@ class Tile:
         #by default, if a tile is blocked, it also blocks sight
         if block_sight is None: block_sight = blocked
         self.block_sight = block_sight
- 
-class Rect:
-    #a rectangle on the map. used to characterize a room.
-    def __init__(self, x, y, w, h):
-        self.x1 = x
-        self.y1 = y
-        self.x2 = x + w
-        self.y2 = y + h
- 
-    def center(self):
-        center_x = (self.x1 + self.x2) / 2
-        center_y = (self.y1 + self.y2) / 2
-        return (center_x, center_y)
- 
-    def intersect(self, other):
-        #returns true if this rectangle intersects with another one
-        return (self.x1 <= other.x2 and self.x2 >= other.x1 and
-                self.y1 <= other.y2 and self.y2 >= other.y1)
- 
+
+        
+#class Combat:
+    #a class containing logic necessary to run during the combat state
+        
+class Script:
+    def __init__(self, name=None, data=None, scripts=None):
+        self.name = name
+        self.data = data
+        self.scripts = scripts
+        
+    def __str__(self):
+        return str(self.name)
+    
+        
+
+    def getChoice(self):
+        self.choice = raw_input("=>")
+        if not self.scripts.keys():
+            return False
+        if self.choice in self.scripts.keys():
+            return True
+        return False
+
+    def run(self):
+        while True:
+            print
+            print(self.data)
+            print
+            if self.scripts:
+                for scr in self.scripts.values():
+                    print(scr.name)
+            if not self.getChoice():
+                break
+            if self.scripts:
+                self = self.scripts.get(self.choice)
+        
+
+#class Encounter:
+    #encounter has to be just data
+    #
+    #encounter has a collection of objects which can be carried between landmarks to make the text events more variable
+    #
+    #encounter will likely need a subset of it's objects to be defined as combatants, since these objects will trigger the combat state
+    
 class Object:
     #this is a generic object: the player, a monster, an item, the stairs...
     #it's always represented by a character on screen.
@@ -85,9 +111,29 @@ class Object:
     def clear(self):
         #erase the character that represents this object
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
+
+    def collide(self, object):
+        if self.y == object.y and self.x == object.x:
+            return True
+        else:
+            return False
+
  
- 
- 
+class Landmark(Object):
+     
+    #a location on the map that you can enter
+    def __init__(self, x, y, char, color, name, objects, event):
+        Object.__init__(self, x, y, char, color)
+        self.name = name
+        self.objects = objects
+        self.event = event
+        
+    def update(self):
+        for obj in self.objects:
+            if Object.collide(self, obj):
+                #run event if available
+                self.event.run()
+                                 
 def create_room(room):
     global map
     #go through the tiles in the rectangle and make them passable
@@ -252,12 +298,17 @@ con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
  
 #create object representing the player
 player = Object(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, '@', libtcod.white)
- 
+
+holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
+discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
+holeInMound.scripts = {discoverMound.name:discoverMound}
+mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.grey, "Mound", [player], discoverMound)
+
 #create an NPC
 npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '@', libtcod.yellow)
  
 #the list of objects with those two
-objects = [npc, player]
+objects = [npc, player, mound]
  
 #generate map (at this point it's not drawn to the screen)
 make_map()
@@ -275,13 +326,13 @@ while not libtcod.console_is_window_closed():
  
     #render the screen
     render_all()
- 
     libtcod.console_flush()
  
     #erase all objects at their old locations, before they move
     for object in objects:
         object.clear()
  
+    objects[2].update()
     #handle keys and exit game if needed
     exit = handle_keys()
     if exit:
