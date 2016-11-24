@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+import textwrap
  
 #actual size of the window
 SCREEN_WIDTH = 80
@@ -6,7 +7,15 @@ SCREEN_HEIGHT = 50
  
 #size of the map
 MAP_WIDTH = 80
-MAP_HEIGHT = 45 
+MAP_HEIGHT = 43
+
+#variables for GUI
+BAR_WIDTH = 20
+PANEL_HEIGHT = 7
+PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
+MSG_X = BAR_WIDTH + 2
+MSG_WIDTH = SCREEN_WIDTH - BAR_WIDTH - 2
+MSG_HEIGHT = PANEL_HEIGHT - 1
  
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
@@ -44,9 +53,7 @@ class Script:
         self.scripts = scripts
         
     def __str__(self):
-        return str(self.name)
-    
-        
+        return str(self.name)        
 
     def getChoice(self):
         self.choice = raw_input("=>")
@@ -111,7 +118,6 @@ class Object:
             return True
         else:
             return False
-
  
 class Landmark(Object):
      
@@ -141,7 +147,26 @@ def make_map():
     map[30][22].block_sight = True
     map[50][22].blocked = True
     map[50][22].block_sight = True
+    map[11][15].block_sight = True
+
+def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
+    #render a bar (HP, experience, etc). first calculate the width of the bar
+    bar_width = int(float(value) / maximum * total_width)
  
+    #render the background first
+    libtcod.console_set_default_background(panel, back_color)
+    libtcod.console_rect(panel, x, y, total_width, 1, False, libtcod.BKGND_SCREEN)
+ 
+    #now render the bar on top
+    libtcod.console_set_default_background(panel, bar_color)
+    if bar_width > 0:
+        libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
+ 
+    #finally, some centered text with the values
+    libtcod.console_set_default_foreground(panel, libtcod.white)
+    libtcod.console_print_ex(panel, x + total_width / 2, y, libtcod.BKGND_NONE, libtcod.CENTER,
+        name + ': ' + str(value) + '/' + str(maximum))
+
 def render_all():
     global fov_map, color_dark_wall, color_light_wall
     global color_dark_ground, color_light_ground
@@ -150,7 +175,11 @@ def render_all():
     if fov_recompute:
         #recompute FOV if needed (the player moved or something)
         fov_recompute = False
-        libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+        #check to see if player is inside a forest/trees, later will need to be able to check if player is in forest or on mountain and adjust FOV
+        if map[player.x][player.y].block_sight == True:
+            libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS/2, FOV_LIGHT_WALLS, FOV_ALGO)
+        else:
+            libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
  
         #go through all tiles, and set their background color according to the FOV
         for y in range(MAP_HEIGHT):
@@ -170,13 +199,41 @@ def render_all():
                     else:
                         libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET )
                     map[x][y].explored = True
- 
-    #draw all objects in the list
+    
+    #draw all objects in the list except for the player, who appears over other objects so is drawn last
     for object in objects:
-        object.draw()
- 
+        if object != player:
+            object.draw()
+    player.draw()
+
     #blit the contents of "con" to the root console
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
+    #prepare to render the GUI panel
+    libtcod.console_set_default_background(panel, libtcod.black)
+    libtcod.console_clear(panel)
+
+    #print the game messages, one line at a time
+    y = 1
+    for (line, color) in game_msgs:
+        libtcod.console_set_default_foreground(panel, color)
+        libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
+        y += 1
+
+    #blit the contents of "panel" to the root console
+    libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
+
+def message(new_msg, color = libtcod.white):
+    #split the message if necessary, among multiple lines
+    new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
+ 
+    for line in new_msg_lines:
+        #if the buffer is full, remove the first line to make room for the new one
+        if len(game_msgs) == MSG_HEIGHT:
+            del game_msgs[0]
+ 
+        #add the new line as a tuple, with the text and the color
+        game_msgs.append( (line, color) )
  
 def handle_keys():
     global fov_recompute
@@ -190,36 +247,42 @@ def handle_keys():
  
     elif key.vk == libtcod.KEY_ESCAPE:
         return True  #exit game
+
+    if game_state == 'playing':
+        #movement keys
+        if libtcod.console_is_key_pressed(libtcod.KEY_UP):
+            player.move(0, -1)
+            fov_recompute = True
  
-    #movement keys
-    if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-        player.move(0, -1)
-        fov_recompute = True
+        elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
+            player.move(0, 1)
+            fov_recompute = True
  
-    elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-        player.move(0, 1)
-        fov_recompute = True
+        elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
+            player.move(-1, 0)
+            fov_recompute = True
  
-    elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-        player.move(-1, 0)
-        fov_recompute = True
+        elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
+            player.move(1, 0)
+            fov_recompute = True
  
-    elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-        player.move(1, 0)
-        fov_recompute = True
- 
+def player_death(player):
+    global game_state
+    message('You died!', libtcod.red)
+    game_state = 'dead'
  
 #############################################
 # Initialization & Main Loop
 #############################################
  
 libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'python/libtcod tutorial', False)
+libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'roguelite', False)
 libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
+panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
  
 #create object representing the player
-player = Object(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, '@', libtcod.white)
+player = Object(25, 23, '@', libtcod.white)
 
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
@@ -228,9 +291,11 @@ mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.grey, "M
 
 #create an NPC
 npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '@', libtcod.yellow)
+
+tree = Object(11, 15, 't', libtcod.green)
  
 #the list of objects with those two
-objects = [npc, player, mound]
+objects = [npc, player, mound, tree]
  
 #generate map (at this point it's not drawn to the screen)
 make_map()
@@ -243,6 +308,13 @@ for y in range(MAP_HEIGHT):
  
  
 fov_recompute = True
+game_state = 'playing'
+
+#create the list of game messages and their colors, starts empty
+game_msgs = []
+ 
+#a warm welcoming message!
+message('Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.', libtcod.red)
  
 while not libtcod.console_is_window_closed():
  
@@ -254,7 +326,6 @@ while not libtcod.console_is_window_closed():
     for object in objects:
         object.clear()
  
-    objects[2].update()
     #handle keys and exit game if needed
     exit = handle_keys()
     if exit:
