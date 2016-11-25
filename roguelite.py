@@ -28,6 +28,9 @@ color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
 color_light_ground = libtcod.Color(200, 180, 50)
+
+libtcod.console_set_default_background(0, libtcod.white)
+
  
  
 class Tile:
@@ -119,6 +122,8 @@ class Object:
     def clear(self):
         #erase the character that represents this object
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
+        #if libtcod.map_is_in_fov(fov_map, self.x, self.y):
+            #libtcod.console_put_char_ex(con, self.x, self.y, '.', libtcod.white, libtcod.dark_blue)
 
     def collide(self, object):
         if self.y == object.y and self.x == object.x:
@@ -178,6 +183,8 @@ def render_all():
     global fov_map, color_dark_wall, color_light_wall
     global color_dark_ground, color_light_ground
     global fov_recompute
+
+    #libtcod.console_set_default_background(0, libtcod.white)
  
     if fov_recompute:
         #recompute FOV if needed (the player moved or something)
@@ -202,9 +209,11 @@ def render_all():
                 else:
                     #it's visible
                     if wall:
-                        libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET )
+                        #libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET )
+                        libtcod.console_put_char_ex(con, x, y, '#', libtcod.black, libtcod.white)
                     else:
-                        libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET )
+                        #libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET )
+                        libtcod.console_put_char_ex(con, x, y, '.', libtcod.black, libtcod.white)
                     map[x][y].explored = True
     
     #draw all objects in the list except for the player, who appears over other objects so is drawn last
@@ -217,7 +226,7 @@ def render_all():
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
     #prepare to render the GUI panel
-    libtcod.console_set_default_background(panel, libtcod.black)
+    libtcod.console_set_default_background(panel, libtcod.white)
     libtcod.console_clear(panel)
 
     #print the game messages, one line at a time
@@ -289,7 +298,7 @@ con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
  
 #create object representing the player
-player = Object(25, 23, '@', libtcod.white)
+player = Object(25, 23, '@', libtcod.black)
 
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
@@ -298,7 +307,7 @@ mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.grey, "M
 
 tree = Object(11, 15, 't', libtcod.green)
 
-npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', libtcod.red)
+npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', libtcod.black)
  
 #the list of objects with those two
 objects = [npc, player, mound, tree]
