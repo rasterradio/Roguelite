@@ -104,17 +104,18 @@ class Object:
     def draw(self):
         #only show if it's visible to the player
         #if libtcod.map_is_in_fov(fov_map, self.x, self.y):
-        for y in range(MAP_HEIGHT):
-            for x in range(MAP_WIDTH):
+        #for y in range(MAP_HEIGHT):
+            #for x in range(MAP_WIDTH):
                 #set the color and then draw the character that represents this object at its position
-                if map[x][y].explored and self.char != '@':
-                    libtcod.console_set_default_foreground(con, color_light_ground * libtcod.dark_gray)
-                    libtcod.console_put_char(con, self.lastX, self.lastY, self.char, libtcod.BKGND_NONE)
-                if libtcod.map_is_in_fov(fov_map, self.x, self.y):
-                    libtcod.console_set_default_foreground(con, self.color)
-                    libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
-                    self.lastX = self.x
-                    self.lastY = self.y
+        if map[self.x][self.y].explored and not (libtcod.map_is_in_fov(fov_map, self.x, self.y)):
+            libtcod.console_set_default_foreground(con, color_light_ground * libtcod.dark_gray)
+            libtcod.console_put_char(con, self.lastX, self.lastY, self.char, libtcod.BKGND_NONE)
+
+        if libtcod.map_is_in_fov(fov_map, self.x, self.y):
+            libtcod.console_set_default_foreground(con, self.color)
+            libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
+            self.lastX = self.x
+            self.lastY = self.y
 
     def clear(self):
         #erase the character that represents this object
@@ -311,7 +312,8 @@ fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 for y in range(MAP_HEIGHT):
     for x in range(MAP_WIDTH):
         libtcod.map_set_properties(fov_map, x, y, not map[x][y].block_sight, not map[x][y].blocked)
- 
+        
+
  
 fov_recompute = True
 game_state = 'playing'
