@@ -19,7 +19,7 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
  
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
-TORCH_RADIUS = 10
+LIGHT_RADIUS = 10
  
 LIMIT_FPS = 20  #20 frames-per-second maximum
  
@@ -27,11 +27,7 @@ LIMIT_FPS = 20  #20 frames-per-second maximum
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
-color_light_ground = libtcod.Color(200, 180, 50)
-
-libtcod.console_set_default_background(0, libtcod.white)
-
- 
+color_light_ground = libtcod.Color(200, 180, 50) 
  
 class Tile:
     #a tile of the map and its properties
@@ -110,6 +106,7 @@ class Object:
         #for y in range(MAP_HEIGHT):
             #for x in range(MAP_WIDTH):
                 #set the color and then draw the character that represents this object at its position
+        #fade objects out of FOV
         if map[self.x][self.y].explored and not (libtcod.map_is_in_fov(fov_map, self.x, self.y)):
             libtcod.console_set_default_foreground(con, color_light_ground * libtcod.dark_gray)
             libtcod.console_put_char(con, self.lastX, self.lastY, self.char, libtcod.BKGND_NONE)
@@ -176,7 +173,7 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
         libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
  
     #finally, some centered text with the values
-    libtcod.console_set_default_foreground(panel, libtcod.white)
+    libtcod.console_set_default_foreground(panel, libtcod.black)
     libtcod.console_print_ex(panel, x + total_width / 2, y, libtcod.BKGND_NONE, libtcod.CENTER,
         name + ': ' + str(value) + '/' + str(maximum))
 
@@ -184,17 +181,15 @@ def render_all():
     global fov_map, color_dark_wall, color_light_wall
     global color_dark_ground, color_light_ground
     global fov_recompute
-
-    #libtcod.console_set_default_background(0, libtcod.white)
  
     if fov_recompute:
         #recompute FOV if needed (the player moved or something)
         fov_recompute = False
         #check to see if player is inside a forest/trees, later will need to be able to check if player is in forest or on mountain and adjust FOV
         if map[player.x][player.y].block_sight == True:
-            libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS/2, FOV_LIGHT_WALLS, FOV_ALGO)
+            libtcod.map_compute_fov(fov_map, player.x, player.y, LIGHT_RADIUS/2, FOV_LIGHT_WALLS, FOV_ALGO)
         else:
-            libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+            libtcod.map_compute_fov(fov_map, player.x, player.y, LIGHT_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
  
         #go through all tiles, and set their background color according to the FOV
         for y in range(MAP_HEIGHT):
@@ -204,9 +199,13 @@ def render_all():
                 if not visible:
                     if map[x][y].explored:
                         if wall:
-                            libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
+                            libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
                         else:
-                            libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
+                            libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
+                    else:
+                        #white FOV
+                        libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
+
                 else:
                     #it's visible
                     if wall:
@@ -227,7 +226,7 @@ def render_all():
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
     #prepare to render the GUI panel
-    libtcod.console_set_default_background(panel, libtcod.white)
+    libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)
 
     #print the game messages, one line at a time
@@ -297,6 +296,8 @@ libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'roguelite', False)
 libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
+
+
  
 #create object representing the player
 player = Object(25, 23, '@', libtcod.black)
@@ -304,9 +305,9 @@ player = Object(25, 23, '@', libtcod.black)
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
 holeInMound.scripts = {discoverMound.name:discoverMound}
-mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.grey, "Mound", [player], discoverMound)
+mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.black, "Mound", [player], discoverMound)
 
-tree = Object(11, 15, 't', libtcod.green)
+tree = Object(11, 15, 't', libtcod.black)
 
 npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', libtcod.black)
  
@@ -331,7 +332,7 @@ game_state = 'playing'
 game_msgs = []
  
 #a warm welcoming message!
-message('Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.', libtcod.red)
+message('Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.')
  
 while not libtcod.console_is_window_closed():
  
