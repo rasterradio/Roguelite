@@ -37,7 +37,6 @@ class Tile:
 
         #all tiles start unexplored
         self.explored = False
- 
         #by default, if a tile is blocked, it also blocks sight
         if block_sight is None: block_sight = blocked
         self.block_sight = block_sight
@@ -92,6 +91,9 @@ class Object:
         self.y = y
         self.char = char
         self.color = color
+        self.fadedColor = color - libtcod.dark_gray
+        self.lastX = self.x
+        self.lastY = self.y
  
     def move(self, dx, dy):
         #move by the given amount, if the destination is not blocked
@@ -104,11 +106,16 @@ class Object:
         #if libtcod.map_is_in_fov(fov_map, self.x, self.y):
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                if map[x][y].explored:
                 #set the color and then draw the character that represents this object at its position
+                if map[x][y].explored and self.char != '@':
+                    libtcod.console_set_default_foreground(con, color_light_ground * libtcod.dark_gray)
+                    libtcod.console_put_char(con, self.lastX, self.lastY, self.char, libtcod.BKGND_NONE)
+                if libtcod.map_is_in_fov(fov_map, self.x, self.y):
                     libtcod.console_set_default_foreground(con, self.color)
                     libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
- 
+                    self.lastX = self.x
+                    self.lastY = self.y
+
     def clear(self):
         #erase the character that represents this object
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
@@ -289,10 +296,9 @@ discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage 
 holeInMound.scripts = {discoverMound.name:discoverMound}
 mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.grey, "Mound", [player], discoverMound)
 
-#create an NPC
-npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '@', libtcod.yellow)
-
 tree = Object(11, 15, 't', libtcod.green)
+
+npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', libtcod.red)
  
 #the list of objects with those two
 objects = [npc, player, mound, tree]
@@ -326,6 +332,8 @@ while not libtcod.console_is_window_closed():
     for object in objects:
         object.clear()
  
+    objects[2].update()
+
     #handle keys and exit game if needed
     exit = handle_keys()
     if exit:
