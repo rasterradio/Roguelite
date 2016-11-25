@@ -22,8 +22,7 @@ FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 10
  
 LIMIT_FPS = 20  #20 frames-per-second maximum
- 
- 
+
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
@@ -72,8 +71,7 @@ class Script:
             if not self.getChoice():
                 break
             if self.scripts:
-                self = self.scripts.get(self.choice)
-        
+                self = self.scripts.get(self.choice)     
 
 #class Encounter:
     #encounter has to be just data
@@ -85,12 +83,12 @@ class Script:
 class Object:
     #this is a generic object: the player, a monster, an item, the stairs...
     #it's always represented by a character on screen.
-    def __init__(self, x, y, char, color):
+    def __init__(self, x, y, char):
         self.x = x
         self.y = y
         self.char = char
-        self.color = color
-        self.fadedColor = color - libtcod.dark_gray
+        self.color = libtcod.black
+        #self.fadedColor = color - libtcod.dark_gray
         self.lastX = self.x
         self.lastY = self.y
  
@@ -101,11 +99,6 @@ class Object:
             self.y += dy
  
     def draw(self):
-        #only show if it's visible to the player
-        #if libtcod.map_is_in_fov(fov_map, self.x, self.y):
-        #for y in range(MAP_HEIGHT):
-            #for x in range(MAP_WIDTH):
-                #set the color and then draw the character that represents this object at its position
         #fade objects out of FOV
         if map[self.x][self.y].explored and not (libtcod.map_is_in_fov(fov_map, self.x, self.y)):
             libtcod.console_set_default_foreground(con, color_light_ground * libtcod.dark_gray)
@@ -130,10 +123,9 @@ class Object:
             return False
  
 class Landmark(Object):
-     
     #a location on the map that you can enter
-    def __init__(self, x, y, char, color, name, objects, event):
-        Object.__init__(self, x, y, char, color)
+    def __init__(self, x, y, char, name, objects, event):
+        Object.__init__(self, x, y, char)
         self.name = name
         self.objects = objects
         self.event = event
@@ -143,6 +135,11 @@ class Landmark(Object):
             if Object.collide(self, obj):
                 #run event if available
                 self.event.run()
+
+    #def visited(self):
+        #if player.x == self.x and player.y == self.y:
+            r#eturn True
+    #need code so that landmarks will fade once visited
                                  
 def make_map():
     global map
@@ -198,14 +195,10 @@ def render_all():
                 wall = map[x][y].block_sight
                 if not visible:
                     if map[x][y].explored:
-                        if wall:
-                            libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
-                        else:
-                            libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
+                        libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
                     else:
                         #white FOV
                         libtcod.console_set_char_background(con, x, y, libtcod.white, libtcod.BKGND_SET)
-
                 else:
                     #it's visible
                     if wall:
@@ -213,7 +206,7 @@ def render_all():
                         libtcod.console_put_char_ex(con, x, y, '#', libtcod.black, libtcod.white)
                     else:
                         #libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET )
-                        libtcod.console_put_char_ex(con, x, y, '.', libtcod.black, libtcod.white)
+                        libtcod.console_put_char_ex(con, x, y, '.', libtcod.grey, libtcod.white)
                     map[x][y].explored = True
     
     #draw all objects in the list except for the player, who appears over other objects so is drawn last
@@ -257,7 +250,7 @@ def handle_keys():
     #key = libtcod.console_check_for_keypress()  #real-time
     key = libtcod.console_wait_for_keypress(True)  #turn-based
  
-    if key.vk == libtcod.KEY_ENTER and key.lalt:
+    if key.vk == libtcod.KEY_ENTER and key.lalt or key.vk == libtcod.KEY_ENTER and key.ralt:
         #Alt+Enter: toggle fullscreen
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
  
@@ -297,19 +290,17 @@ libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
-
- 
 #create object representing the player
-player = Object(25, 23, '@', libtcod.black)
+player = Object(25, 23, '@')
 
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
 holeInMound.scripts = {discoverMound.name:discoverMound}
-mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', libtcod.black, "Mound", [player], discoverMound)
+mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
 
-tree = Object(11, 15, 't', libtcod.black)
+tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
 
-npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', libtcod.black)
+npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&')
  
 #the list of objects with those two
 objects = [npc, player, mound, tree]
@@ -322,8 +313,6 @@ fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 for y in range(MAP_HEIGHT):
     for x in range(MAP_WIDTH):
         libtcod.map_set_properties(fov_map, x, y, not map[x][y].block_sight, not map[x][y].blocked)
-        
-
  
 fov_recompute = True
 game_state = 'playing'
