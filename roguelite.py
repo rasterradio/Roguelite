@@ -138,23 +138,40 @@ class Landmark(Object):
 
     #def visited(self):
         #if player.x == self.x and player.y == self.y:
-            r#eturn True
+            #return True
     #need code so that landmarks will fade once visited
                                  
 def make_map():
-    global map
- 
+    global map 
+    map = [[0 for x in range(MAP_HEIGHT)] for y in range(MAP_WIDTH)] 
+    
+    map_data = open('map.txt', 'r')
+
+    x=0
+    y=0
+
+    for char in map_data.read():
+        if char == '_':
+            map[x][y] = Tile(False)
+        if char == 'X':
+            map[x][y] = Tile(True, True)
+        x += 1
+        if x > MAP_WIDTH:
+            x = 0
+            y += 1
     #fill map with "unblocked" tiles
-    map = [[ Tile(False)
-        for y in range(MAP_HEIGHT) ]
-            for x in range(MAP_WIDTH) ]
+    #map = [[ Tile(False)
+     #   for y in range(MAP_HEIGHT) ]
+      #      for x in range(MAP_WIDTH) ]
  
     #place two pillars to test the map
-    map[30][22].blocked = True
-    map[30][22].block_sight = True
-    map[50][22].blocked = True
-    map[50][22].block_sight = True
-    map[11][15].block_sight = True
+    #map[30][22].blocked = True
+    #map[30][22].block_sight = True
+    #map[50][22].blocked = True
+    #map[50][22].block_sight = True
+    #map[11][15].block_sight = True
+
+    map_data.close()
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     #render a bar (HP, experience, etc). first calculate the width of the bar
