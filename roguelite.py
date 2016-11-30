@@ -4,10 +4,6 @@ import textwrap
 #actual size of the window
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
- 
-#size of the map
-MAP_WIDTH = 80
-MAP_HEIGHT = 43
 
 #variables for GUI
 BAR_WIDTH = 20
@@ -142,23 +138,30 @@ class Landmark(Object):
     #need code so that landmarks will fade once visited
                                  
 def make_map():
-    global map 
-    map = [[0 for x in range(MAP_HEIGHT)] for y in range(MAP_WIDTH)] 
-    
     map_data = open('map.txt', 'r')
 
-    x=0
-    y=0
+    x = 0
+    y = -1
+    for line in map_data:
+        if y == -1 and line.find('x') != -1:
+            global MAP_WIDTH
+            MAP_WIDTH = int(line.split('x', 2)[0])
+            global MAP_HEIGHT
+            MAP_HEIGHT = int(line.split('x', 2)[1])
 
-    for char in map_data.read():
-        if char == '_':
-            map[x][y] = Tile(False)
-        if char == 'X':
-            map[x][y] = Tile(True, True)
-        x += 1
-        if x > MAP_WIDTH:
-            x = 0
-            y += 1
+            global map
+            map = [[Tile(False) for a in range(MAP_HEIGHT)] for b in range(MAP_WIDTH)] 
+
+        if y < MAP_HEIGHT and y >= 0:
+            for char in line:
+                if x < MAP_WIDTH:
+                    if char == '_':
+                        map[x][y] = Tile(False)
+                    if char == 'X':
+                        map[x][y] = Tile(True, True)
+                x += 1
+        x = 0
+        y += 1
     #fill map with "unblocked" tiles
     #map = [[ Tile(False)
      #   for y in range(MAP_HEIGHT) ]

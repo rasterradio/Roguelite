@@ -1,0 +1,28 @@
+COMBAT
+
+*All of this is for demo purposes and may differ from the finished game*
+
+The goal of the game is to make it to one of the edges of the map, escape the wasteland. But this requires water. Whenever you enter a landmark (currently we will have 'H' for houses and 'T' for towns), several things can happen:
+
+- You always get your water filled from the well
+- You can overhear conversations between NPCs
+- You can get in a fight
+
+Fighting has a few options depending on what you have available:
+- You can always use your fists
+- You can always try to run away
+- You can use available items
+
+Characters have a hit point system similair to D&D. When a character's life reaches 0, they pass out. At that point, attacking does double damage and the descriptions become more grisly. When their health reaches their max life *-1, they are dead. However they can still be attacked until their health points reach a certain value (to be determined, by this point they are a red stain on the ground). Once the character has passed out, the "fists" command changes to a "kick".
+
+The player doesn't know the enemy's health total, but they know their own. If the player's health reaches 0, they pass out and it is game over. 
+
+Because the player is attacking in self-defense, the enemy always attacks first. When a fighter is dealt a certain amount of damage from an attack, they stumble and miss a turn. Fists won't do this, but other weapons are likely to. If the fighter is recovering during their turn, getting hit has a chance to make them stumble again. The percentage increases the lower a fighter's health is. When a fighter's health goes below half of their max hp, they automatically stumble.
+
+Physical attacks do a set amount of damage at first, with a slightly less amount being dealt after each stumble, until they do half of their base damage, rounded up. Tools will deal the same damage no matter what. 
+
+For the demo, the only tool we can afford to implement would be a gun. Taking out a tool costs a turn. The player doesn't start with a gun but if they defeat an enemy who has a gun they can take it. The player can only hold 6 bullets max, and the enemy can never spawn with more than 3 on them. If an enemy uses a bullet that depletes from their stock permanently (I hate when enemies in games have infinite ammo but when the player takes their weapons they only have half a clip). Not every enemy will spawn with a gun. Enemies won't use a gun until their hp has fallen below half, rounded up (so not until that first mandatory stagger). 
+
+Escaping is the only way to leave in combat. A player cannot escape from an enemy until the enemy has been hurt first. While an enemy is staggered, the player can escape. While the player is staggered, they cannot escape. If both player and enemy are staggered, treat the escape like a regular escape. If the enemy is passed out or dead, the player can always escape. 
+
+Players cannot heal during combat, but can have their wounds treated when in a cleared town (a town that the player has survived a fight in). Maybe also let the player heal a smaller amount in a cleared house, letting them camp overnight?
