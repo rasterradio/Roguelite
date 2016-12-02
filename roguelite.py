@@ -35,10 +35,43 @@ class Tile:
         if block_sight is None: block_sight = blocked
         self.block_sight = block_sight
 
-        
-#class Combat:
+#define combatants which enemies and player will inherit from. combatants will have anonymous functions which will run on defined events based on combat data
+#event examples, event on low hp, event on low bullets, event on being hit 4 times in a row, event on hitting the player 4 times in a row, 
+#event on the player taking out a gun, event on the enemy taking out a gun   
+#event on the enemy dying
+#event on the player dying
+#combatant stats include hp, dmg, bullets, gun
+# player and enemy choices are stored in the combat class, combat class also contains info that is printed to the screen,
+#including player choices and current state of battle
+
+class Combat:
     #a class containing logic necessary to run during the combat state
-        
+    def __init__(self, myself, enemy):
+        self.state = ""
+        self.choices = []
+        self.enemy = enemy
+        self.myself = myself
+
+    def determineIntent(self, enemy):
+        return "attack"
+
+    def run(self):
+        while True:
+            print(self.state)
+            player_choice = raw_input("=>")
+            if player_choice == "attack":
+                enemy.hp -= myself.dmg
+            
+            enemy_choice = determineIntent(self.enemy)
+            if enemy_choice == "attack":
+                myself.hp -= enemy.dmg
+
+
+            if player_choice == "flee":
+                break;
+            if enemy_choice == "flee":
+                break;
+
 class Script:
     def __init__(self, name=None, data=None, scripts=None):
         self.name = name
