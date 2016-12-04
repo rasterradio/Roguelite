@@ -12,11 +12,11 @@ PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
 MSG_X = BAR_WIDTH + 2
 MSG_WIDTH = SCREEN_WIDTH - BAR_WIDTH - 2
 MSG_HEIGHT = PANEL_HEIGHT - 1
- 
+
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 10
- 
+
 LIMIT_FPS = 20  #20 frames-per-second maximum
 
 color_dark_wall = libtcod.Color(0, 0, 100)
@@ -44,6 +44,7 @@ class Tile:
 # player and enemy choices are stored in the combat class, combat class also contains info that is printed to the screen,
 #including player choices and current state of battle
 
+
 class Combat:
     #a class containing logic necessary to run during the combat state
     def __init__(self, myself, enemy):
@@ -51,26 +52,46 @@ class Combat:
         self.choices = []
         self.enemy = enemy
         self.myself = myself
+        self.run()
 
     def determineIntent(self, enemy):
         return "attack"
 
     def run(self):
+        myself = self.myself
+        enemy = self.enemy
         while True:
-            print(self.state)
+            print self.state
             player_choice = raw_input("=>")
-            if player_choice == "attack":
+            if player_choice == "fist":
                 enemy.hp -= myself.dmg
-            
-            enemy_choice = determineIntent(self.enemy)
-            if enemy_choice == "attack":
+
+            if player_choice == "gun" and myself.gun:
+                enemy.seeGun()
+
+            if player_choice == "fire" and myself.gun and myself.bullets > 0:
+                enemy.hp -= 20
+                myself.bullets -= 1
+
+
+            enemy_choice = self.determineIntent(self.enemy)
+            if enemy_choice == "fist":
                 myself.hp -= enemy.dmg
 
+            if enemy_choice == "gun" and enemy.gun:
+                myself.seeGun()
 
-            if player_choice == "flee":
-                break;
-            if enemy_choice == "flee":
-                break;
+            if enemy_choice == "fire" and enemy.gun and enemy.bullets > 0:
+                myself.hp -= 20
+                enemy.bullets -= 1
+
+            myself.update()
+            enemy.update()
+
+            if player_choice == "escape":
+                break
+            if enemy_choice == "escape":
+                break
 
 class Script:
     def __init__(self, name=None, data=None, scripts=None):
@@ -150,7 +171,28 @@ class Object:
             return True
         else:
             return False
- 
+
+
+class Combatant(Object):
+    def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun):
+        Object.__init__(self, x, y, char)
+        self.hp = hp
+        self.maxHp = hp
+        self.dmg = dmg
+        self.bullets = bullets
+        self.gun = gun
+        self.dead = False
+        self.halfHp = halfHp
+        self.lowBullets = lowBullets
+        self.seeGun = seeGun
+
+    def update(self):
+        if self.hp < self.maxHp/2:
+            self.halfHp()
+        if self.bullets < 3 and self.gun:
+            self.lowBullets()
+
+
 class Landmark(Object):
     #a location on the map that you can enter
     def __init__(self, x, y, char, name, objects, event):
@@ -343,8 +385,18 @@ libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
+
+def handleHit():
+    print("OWCH")
+
+def handleLowAmmo():
+    print("NoAmmo")
+
+def handleSeeGun():
+    print("YIKES")
 #create object representing the player
-player = Object(25, 23, '@')
+player = Combatant(25, 23, '@', 20, 2, 6, False, handleHit, handleLowAmmo, handleSeeGun)
+
 
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
@@ -353,7 +405,7 @@ mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player
 
 tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
 
-npc = Object(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&')
+npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun)
  
 #the list of objects with those two
 objects = [npc, player, mound, tree]
@@ -387,7 +439,8 @@ while not libtcod.console_is_window_closed():
         object.clear()
  
     objects[2].update()
-
+    if player.x == npc.x and player.y == npc.y:
+        Combat(player, npc)
     #handle keys and exit game if needed
     exit = handle_keys()
     if exit:
