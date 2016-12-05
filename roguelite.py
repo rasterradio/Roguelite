@@ -50,7 +50,10 @@ class Tile:
 class Combat:
     #a class containing logic necessary to run during the combat state
     def __init__(self, myself, enemy):
-        self.player_results = read_grid_text('gridTextExample.txt', 3, 3)
+        self.player_results_fist = read_grid_text('playerFistStagger.txt', 3, 3)
+        self.player_results_gun = read_grid_text('playerGunStagger.txt', 3, 3)
+        self.player_results_fire = read_grid_text('playerFireStagger.txt', 3, 3)
+        self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 3, 3)
         self.state = ""
         self.choices = []
         self.enemy = enemy
@@ -83,18 +86,21 @@ class Combat:
             print ""
 
             player_choice = raw_input("=>")
-            if myself.stagger == 0:
+            if myself.stagger == 0
                 if player_choice == "fist":
                     enemy.hp -= myself.dmg
-                    myself_result = self.player_results[2][2]
+                    myself_result = self.player_results_fist[enemy.stagger][myself.stagger]
 
                 if player_choice == "gun" and myself.gun:
                     myself.cocked = True
                     enemy.seeGun()
+                    myself_result = self.player_results_fire[enemy.stagger][myself.stagger]
                 if player_choice == "gun" and myself.cocked and myself.bullets > 0:
                     enemy.hp -= 4
-                    enemy.stagger += 1
+                    if enemy.stagger < 3:
+                        enemy.stagger += 1
                     myself.bullets -= 1
+                    myself_result = self.player_results_gun[enemy.stagger][myself.stagger]
 
             print myself_result
 
@@ -109,7 +115,8 @@ class Combat:
 
                 if enemy_choice == "gun" and enemy.cocked and enemy.bullets > 0:
                     myself.hp -= 4
-                    myself.stagger += 1
+                    if myself.stagger < 3:
+                        myself.stagger += 1
                     enemy.bullets -= 1
 
             print enemy_result
@@ -125,6 +132,7 @@ class Combat:
             enemy.combat_update()
 
             if player_choice == "escape" and myself.stagger == 0:
+                    myself_result = self.player_results_escape[enemy.stagger][myself.stagger]
                 break
             if enemy_choice == "escape" and enemy.stagger == 0:
                 break
