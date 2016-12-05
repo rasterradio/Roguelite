@@ -140,12 +140,14 @@ class Script:
     def __str__(self):
         return str(self.name)        
 
-    def getChoice(self):
+    def getChoice(self)
         self.choice = raw_input("=>")
-        if not self.scripts.keys():
-            return False
-        if self.choice in self.scripts.keys():
-            return True
+        if not self.scripts:
+            if not self.scripts.keys():
+                return False
+        for x in self.scripts.keys():
+            if self.choice.lower() == x.lower():
+                return True
         return False
 
     def run(self):
@@ -163,7 +165,9 @@ class Script:
             if not self.getChoice():
                 break
             if self.scripts:
-                self = self.scripts.get(self.choice)     
+                for y in self.scripts:
+                    if self.choice.lower() == y.lower():
+                        self = self.scripts.get(y)
 
 #class Encounter:
     #encounter has to be just data
