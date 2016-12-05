@@ -563,19 +563,35 @@ houseWater = Script("Drink", "You draw water from the well.\nThere's enough in t
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.")
 houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", {houseWater.name:houseWater, houseSleep.name:houseSleep})
 #discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
-houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire. He turns around and grits his teeth. Mira, es un poco Rojo.")
+houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.")
 #houseSafeSearch.scripts = {discoverHouse.name:discoverHouse}
 
-if randint(0,1) == 0:
+if randint(0,3) == 0:
     discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
-else:
+if randint(0,3) == 1:
     discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
+if randint(0,3) == 2:
+    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseSafeSearch.name:houseSafeSearch})
+if randint(0,3) == 3:
+    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseEnemySearch.name:houseEnemySearch})
 
 #houseFight = Script("attack", )
 #houseEnemySearch = Script("search", "Peeking into the den, you find a young man in uniform burning books to make a fire. He turns around and grits his teeth. Mira, es un poco Rojo.")#, houseFight.name:houseFight})
 #npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
 #Combat(player, npc)
 #discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
+
+#townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last ten days in the wild.")
+#townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.")
+#townEnemy = Script("Search", "As you move through the town, you find all eyes on you.\nA soldier confronts you in an alley. Papelas, he asks, you have none.\nBefore he can draw his weapon you've punched him in the throat.")
+
+
+#if randint(0,1) == 0:
+    #discoverTown = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while nuns shovel hay.\nThe wooden cross has been covered by a Falangist banner.")
+#else:
+    #discoverTown = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.")
+
+#town = Landmark(25, 25, "T", "Town", [player], discoverTown)
 
 house = Landmark(30, 30, 'H', "House", [player], discoverHouse)
 
