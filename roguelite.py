@@ -130,11 +130,12 @@ class Combat:
                 myself.gun = myself.gun or enemy.gun
                 break
 class Script:
-    def __init__(self, name=None, data=None, scripts=None):
+    def __init__(self, name=None, data=None, scripts=None, event=lambda:None):
         self.name = name
         self.data = data
         self.scripts = scripts
-        
+        self.event = event
+
     def __str__(self):
         return str(self.name)        
 
@@ -154,7 +155,7 @@ class Script:
 
             #render the screen
             VIEWSTATE = 'text'
-
+            self.event()
             if self.scripts:
                 for scr in self.scripts.values():
                     print(scr.name)
@@ -512,15 +513,18 @@ def handleSeeGun():
 
 player = Combatant(25, 23, '@', 20, 2, 6, True, handleHit, handleLowAmmo, handleSeeGun, 10)
 
-holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
-discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
-holeInMound.scripts = {discoverMound.name:discoverMound}
-mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
-
 tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
 
 npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
  
+def handleCombat():
+    Combat(player, npc)
+
+holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.", None, handleCombat)
+discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
+holeInMound.scripts = {discoverMound.name:discoverMound}
+mound = Landmark(player.x + 1, player.y + 2, '^', "Mound", [player], discoverMound)
+
 #the list of objects with those two
 objects = [npc, player, mound, tree]
  
