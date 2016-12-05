@@ -18,6 +18,8 @@ FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 10
 
+VIEWSTATE = "ascii"
+
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
@@ -47,6 +49,7 @@ class Tile:
 class Combat:
     #a class containing logic necessary to run during the combat state
     def __init__(self, myself, enemy):
+        self.player_results = read_grid_text('gridTextExample.txt', 3, 3)
         self.state = ""
         self.choices = []
         self.enemy = enemy
@@ -54,35 +57,61 @@ class Combat:
         self.run()
 
     def determineIntent(self, enemy):
-        return "attack"
+        return "fist"
 
     def run(self):
         myself = self.myself
+        myself_result = "PLAYERRESULT"
         enemy = self.enemy
+        enemy_result = "ENEMYRESULT"
         while True:
             print self.state
+            if enemy.stagger > 0:
+                enemy.stagger -= 1
+            if myself.stagger > 0:
+                myself.stagger -= 1
+
+            print "---STATS---"
+            print "bullets =" + str(myself.bullets)
+            print "health =" + str(myself.hp) + "/" + str(myself.maxHp)  
+            print "---OPTIONS---"
+            print "fist"
+            print "gun"
+            print "fire"
+            print "escape"
+            print ""
+
             player_choice = raw_input("=>")
-            if player_choice == "fist":
-                enemy.hp -= myself.dmg
+            if myself.stagger == 0:
+                if player_choice == "fist":
+                    enemy.hp -= myself.dmg
 
-            if player_choice == "gun" and myself.gun:
-                enemy.seeGun()
+                if player_choice == "gun" and myself.gun:
+                    myself.cocked = True
+                    enemy.seeGun()
 
-            if player_choice == "fire" and myself.gun and myself.bullets > 0:
-                enemy.hp -= 20
-                myself.bullets -= 1
+                if player_choice == "fire" and myself.cocked and myself.bullets > 0:
+                    enemy.hp -= 4
+                    enemy.stagger += 1
+                    myself.bullets -= 1
 
+            print myself_result
 
             enemy_choice = self.determineIntent(self.enemy)
-            if enemy_choice == "fist":
-                myself.hp -= enemy.dmg
+            if enemy.stagger == 0:
+                if enemy_choice == "fist":
+                    myself.hp -= enemy.dmg
 
-            if enemy_choice == "gun" and enemy.gun:
-                myself.seeGun()
+                if enemy_choice == "gun" and enemy.gun:
+                    enemy.cocked = True
+                    myself.seeGun()
 
-            if enemy_choice == "fire" and enemy.gun and enemy.bullets > 0:
-                myself.hp -= 20
-                enemy.bullets -= 1
+                if enemy_choice == "fire" and enemy.gun and enemy.bullets > 0:
+                    myself.hp -= 4
+                    myself.stagger += 1
+                    enemy.bullets -= 1
+
+            print enemy_result
 
             if player.hp <= 0:
                 game_state = 'dead'
@@ -90,11 +119,16 @@ class Combat:
             myself.update()
             enemy.update()
 
-            if player_choice == "escape":
+            if player_choice == "escape" and myself.stagger == 0:
                 break
-            if enemy_choice == "escape":
+            if enemy_choice == "escape" and enemy.stagger == 0:
                 break
-
+            if enemy.dead:
+                myself.bullets += enemy.bullets
+                if myself.bullets > 6:
+                    myself.bullets = 6
+                myself.gun = myself.gun or enemy.gun
+                break
 class Script:
     def __init__(self, name=None, data=None, scripts=None):
         self.name = name
@@ -117,6 +151,10 @@ class Script:
             print
             print(self.data)
             print
+
+            #render the screen
+            VIEWSTATE = 'text'
+
             if self.scripts:
                 for scr in self.scripts.values():
                     print(scr.name)
@@ -183,17 +221,21 @@ class Combatant(Object):
         self.dmg = dmg
         self.bullets = bullets
         self.gun = gun
-        self.dead = False
+        self.dead = 0
         self.halfHp = halfHp
         self.lowBullets = lowBullets
         self.seeGun = seeGun
         self.water = water
+        self.stagger = 0
+        self.cocked = False
 
     def update(self):
         if self.hp < self.maxHp/2:
             self.halfHp()
         if self.bullets < 3 and self.gun:
             self.lowBullets()
+        if self.hp <= 0:
+            self.dead = True
 
 
 class Landmark(Object):
@@ -228,7 +270,7 @@ def make_map():
             MAP_HEIGHT = int(line.split('x', 2)[1])
 
             global map
-            map = [[Tile(False) for a in range(MAP_HEIGHT)] for b in range(MAP_WIDTH)] 
+            map = [[Tile(False) for a in range(MAP_HEIGHT)] for b in range(MAP_WIDTH)]
 
         if y < MAP_HEIGHT and y >= 0:
             for char in line:
@@ -240,6 +282,22 @@ def make_map():
                 x += 1
         x = 0
         y += 1
+
+def read_grid_text(file, xRange, yRange):
+    text_file = open(file, 'r')
+    text_data = [["" for a in range(xRange)] for b in range(yRange)]
+    x = 0
+    y = 0
+    for line in text_file:
+        for word in line.split(';'):
+            if x < xRange and y < yRange:
+                text_data[x][y] = word
+            x += 1
+        x = 0
+        y += 1
+
+    return text_data
+
     #fill map with "unblocked" tiles
     #map = [[ Tile(False)
      #   for y in range(MAP_HEIGHT) ]
@@ -272,7 +330,15 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     libtcod.console_print_ex(panel, x + total_width / 2, y, libtcod.BKGND_NONE, libtcod.CENTER,
         name + ': ' + str(value) + '/' + str(maximum))
 
-def render_all():
+def render_text():
+    #blit the contents of "con" to the root console
+    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
+    #prepare to render the GUI panel
+    libtcod.console_set_default_background(panel, libtcod.black)
+    libtcod.console_clear(panel)
+
+def render_ascii():
     global fov_map, color_dark_wall, color_light_wall
     global color_dark_ground, color_light_ground
     global fov_recompute
@@ -355,7 +421,13 @@ def message(new_msg, color = libtcod.white):
  
         #add the new line as a tuple, with the text and the color
         game_msgs.append( (line, color) )
- 
+
+def handle_mouse():
+    mouse = libtcod.mouse_get_status()
+    if mouse.lbutton:
+        if mouse.cx == 0 and mouse.cy == 0:
+            print "MOUSE" 
+
 def handle_keys():
     global fov_recompute
  
@@ -438,8 +510,7 @@ def handleLowAmmo():
 def handleSeeGun():
     print("YIKES")
 
-player = Combatant(25, 23, '@', 20, 2, 6, False, handleHit, handleLowAmmo, handleSeeGun, 10)
-
+player = Combatant(25, 23, '@', 20, 2, 6, True, handleHit, handleLowAmmo, handleSeeGun, 10)
 
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
@@ -471,14 +542,14 @@ start_game = False
 #game_state = 'dead'
  
 while not libtcod.console_is_window_closed():
- 
     #render the screen
     if start_game == False:
         intro()
         if libtcod.console_wait_for_keypress(True).vk != libtcod.KEY_NONE:
             start_game = True
     if game_state != 'dead':
-        render_all()
+        #render_all()
+        render_ascii()
         libtcod.console_flush()
  
     #erase all objects at their old locations, before they move
@@ -489,6 +560,9 @@ while not libtcod.console_is_window_closed():
     if player.x == npc.x and player.y == npc.y:
         Combat(player, npc)
     #handle keys and exit game if needed
-    exit = handle_keys()
+    if VIEWSTATE == 'ascii':
+        exit = handle_keys()
+    else:
+        choice = handle_mouse()
     if exit:
         break
