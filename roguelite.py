@@ -50,10 +50,10 @@ class Tile:
 class Combat:
     #a class containing logic necessary to run during the combat state
     def __init__(self, myself, enemy):
-        self.player_results_fist = read_grid_text('playerFistStagger.txt', 3, 3)
-        self.player_results_gun = read_grid_text('playerGunStagger.txt', 3, 3)
+        self.player_results_fist = read_grid_text('playerFistStagger.txt', 4, 4)
+        self.player_results_gun = read_grid_text('playerGunStagger.txt', 1, 4)
         self.player_results_fire = read_grid_text('playerFireStagger.txt', 3, 3)
-        self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 3, 3)
+        self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 4, 4)
         self.state = ""
         self.choices = []
         self.enemy = enemy
@@ -61,12 +61,18 @@ class Combat:
         self.run()
 
     def determineIntent(self, enemy):
-        return "fist"
+        if enemy.stagger == 0:
+            return "fist"
+        else:
+            if randint(0,3) == 3 and enemy_bullets > 0:
+                return "gun" #do that twice!
+            else:
+                return "fist"
 
     def run(self):
         os.system('CLS')
         myself = self.myself
-        myself_result = "PLAYERRESULT"
+        myself_result = "PLAYERESULT"
         enemy = self.enemy
         enemy_result = "ENEMYRESULT"
         while True:
@@ -77,8 +83,8 @@ class Combat:
                 myself.stagger -= 1
 
             print "---STATS---\n"
-            print "Bullets =" + str(myself.bullets)
-            print "Health =" + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
+            print "Bullets = " + str(myself.bullets)
+            print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
             print "---OPTIONS---\n"
             print "Fist"
             print "Gun"
@@ -86,11 +92,10 @@ class Combat:
             print ""
 
             player_choice = raw_input("=>")
-            if myself.stagger == 0
+            if myself.stagger == 0:
                 if player_choice == "fist":
                     enemy.hp -= myself.dmg
                     myself_result = self.player_results_fist[enemy.stagger][myself.stagger]
-
                 if player_choice == "gun" and myself.gun:
                     myself.cocked = True
                     enemy.seeGun()
@@ -100,7 +105,17 @@ class Combat:
                     if enemy.stagger < 3:
                         enemy.stagger += 1
                     myself.bullets -= 1
-                    myself_result = self.player_results_gun[enemy.stagger][myself.stagger]
+                    myself_result = self.player_results_gun[enemy.stagger][myself.stagger] 
+            if player_choice == "escape":
+                myself_result = self.player_results_escape[enemy.stagger][myself.stagger]
+                if myself.stagger < enemy.stagger:
+                    break
+            if enemy.dead:
+                myself.bullets += enemy.bullets
+                if myself.bullets > 6:
+                    myself.bullets = 6
+                myself.gun = myself.gun or enemy.gun
+                break
 
             print myself_result
 
@@ -131,17 +146,6 @@ class Combat:
             myself.combat_update()
             enemy.combat_update()
 
-            if player_choice == "escape" and myself.stagger == 0:
-                    myself_result = self.player_results_escape[enemy.stagger][myself.stagger]
-                break
-            if enemy_choice == "escape" and enemy.stagger == 0:
-                break
-            if enemy.dead:
-                myself.bullets += enemy.bullets
-                if myself.bullets > 6:
-                    myself.bullets = 6
-                myself.gun = myself.gun or enemy.gun
-                break
 class Script:
     def __init__(self, name=None, data=None, scripts=None, event=lambda:None):
         self.name = name
