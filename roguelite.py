@@ -521,7 +521,6 @@ def handleSeeGun():
 
 player = Combatant(25, 23, '@', 20, 2, 6, True, handleHit, handleLowAmmo, handleSeeGun, 10)
 
-<<<<<<< HEAD
 #holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 #discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
 #holeInMound.scripts = {discoverMound.name:discoverMound}
@@ -548,16 +547,6 @@ else:
 house = Landmark(30, 30, 'H', "House", [player], discoverHouse)
 
 tree = Object(11, 15, 't')
-||||||| merged common ancestors
-holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
-discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
-holeInMound.scripts = {discoverMound.name:discoverMound}
-mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
-
-tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
-=======
-tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
->>>>>>> refs/remotes/origin/Trunk
 
 npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
  
