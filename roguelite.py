@@ -139,10 +139,11 @@ class Script:
     def __str__(self):
         return str(self.name)        
 
-    def getChoice(self):
+    def getChoice(self)
         self.choice = raw_input("=>")
-        if not self.scripts.keys():
-            return False
+        if not self.scripts:
+            if not self.scripts.keys():
+                return False
         for x in self.scripts.keys():
             if self.choice.lower() == x.lower():
                 return True
