@@ -52,8 +52,11 @@ class Combat:
     def __init__(self, myself, enemy):
         self.player_results_fist = read_grid_text('playerFistStagger.txt', 4, 4)
         self.player_results_gun = read_grid_text('playerGunStagger.txt', 1, 4)
-        self.player_results_fire = read_grid_text('playerFireStagger.txt', 3, 3)
+        self.player_results_fire = read_grid_text('playerFireStagger.txt', 1, 4)
         self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 4, 4)
+        self.enemy_results_fist = read_grid_text('enemyFistStagger.txt', 3, 4)
+        self.enemy_results_gun = read_grid_text('enemyGunStagger.txt', 1, 4)
+        self.enemy_results_fire = read_grid_text('enemyFireStagger.txt', 1, 4)
         self.state = ""
         self.choices = []
         self.enemy = enemy
@@ -64,7 +67,7 @@ class Combat:
         if enemy.stagger == 0:
             return "fist"
         else:
-            if randint(0,3) == 3 and enemy_bullets > 0:
+            if randint(0,3) == 3 and enemy.bullets > 0:
                 return "gun" #do that twice!
             else:
                 return "fist"
