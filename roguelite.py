@@ -99,16 +99,19 @@ class Combat:
                 if player_choice == "fist":
                     enemy.hp -= myself.dmg
                     myself_result = self.player_results_fist[enemy.stagger][myself.stagger]
-                if player_choice == "gun" and myself.gun:
-                    myself.cocked = True
-                    enemy.seeGun()
-                    myself_result = self.player_results_fire[enemy.stagger][myself.stagger]
+
                 if player_choice == "gun" and myself.cocked and myself.bullets > 0:
                     enemy.hp -= 4
                     if enemy.stagger < 3:
                         enemy.stagger += 1
                     myself.bullets -= 1
                     myself_result = self.player_results_gun[enemy.stagger][myself.stagger] 
+               
+                if player_choice == "gun" and myself.gun:
+                    myself.cocked = True
+                    enemy.seeGun()
+                    myself_result = self.player_results_fire[enemy.stagger][myself.stagger]
+
             if player_choice == "escape":
                 myself_result = self.player_results_escape[enemy.stagger][myself.stagger]
                 if myself.stagger < enemy.stagger:
@@ -320,7 +323,7 @@ def read_grid_text(file, xRange, yRange):
     for line in text_file:
         for word in line.split(';'):
             if x < xRange and y < yRange:
-                text_data[x][y] = word
+                text_data[x][y] = word.replace("^", "\n")
             x += 1
         x = 0
         y += 1
