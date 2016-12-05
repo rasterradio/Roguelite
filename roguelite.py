@@ -56,7 +56,7 @@ class Combat:
         self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 4, 4)
         self.enemy_results_fist = read_grid_text('enemyFistStagger.txt', 3, 4)
         self.enemy_results_gun = read_grid_text('enemyGunStagger.txt', 1, 4)
-        self.enemy_results_fire = read_grid_text('enemyFireStagger.txt', 1, 4)
+        self.enemy_results_fire = read_grid_text('enemyFireStagger.txt', 4, 4)
         self.state = ""
         self.choices = []
         self.enemy = enemy
@@ -67,6 +67,9 @@ class Combat:
         if enemy.stagger == 0:
             return "fist"
         else:
+            if enemy.cocked == True:
+                enemy.cocked = False
+                return "gun"
             if randint(0,3) == 3 and enemy.bullets > 0:
                 return "gun" #do that twice!
             else:
@@ -106,8 +109,11 @@ class Combat:
                         enemy.stagger += 1
                     myself.bullets -= 1
                     myself_result = self.player_results_gun[enemy.stagger][myself.stagger] 
+
+                if player_choice == "gun" and myself.cocked and myself.bullets <= 0:
+                    myself_result = "You pull the trigger. Nothing. No shells left."
                
-                if player_choice == "gun" and myself.gun:
+                if player_choice == "gun" and myself.cocked == False:
                     myself.cocked = True
                     enemy.seeGun()
                     myself_result = self.player_results_fire[enemy.stagger][myself.stagger]
@@ -130,7 +136,7 @@ class Combat:
                 if enemy_choice == "fist":
                     myself.hp -= enemy.dmg
 
-                if enemy_choice == "gun" and enemy.gun:
+                if enemy_choice == "gun":
                     enemy.cocked = True
                     myself.seeGun()
 
