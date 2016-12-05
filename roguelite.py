@@ -1,6 +1,7 @@
 import libtcodpy as libtcod
 import textwrap
 from random import randint
+import os
  
 #actual size of the window
 SCREEN_WIDTH = 80
@@ -16,7 +17,7 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
-LIGHT_RADIUS = 10
+LIGHT_RADIUS = 20
 
 VIEWSTATE = "ascii"
 
@@ -60,6 +61,7 @@ class Combat:
         return "fist"
 
     def run(self):
+        os.system('CLS')
         myself = self.myself
         myself_result = "PLAYERRESULT"
         enemy = self.enemy
@@ -71,26 +73,25 @@ class Combat:
             if myself.stagger > 0:
                 myself.stagger -= 1
 
-            print "---STATS---"
-            print "bullets =" + str(myself.bullets)
-            print "health =" + str(myself.hp) + "/" + str(myself.maxHp)  
-            print "---OPTIONS---"
-            print "fist"
-            print "gun"
-            print "fire"
-            print "escape"
+            print "---STATS---\n"
+            print "Bullets =" + str(myself.bullets)
+            print "Health =" + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
+            print "---OPTIONS---\n"
+            print "Fist"
+            print "Gun"
+            print "Escape"
             print ""
 
             player_choice = raw_input("=>")
             if myself.stagger == 0:
                 if player_choice == "fist":
                     enemy.hp -= myself.dmg
+                    myself_result = self.player_results[2][2]
 
                 if player_choice == "gun" and myself.gun:
                     myself.cocked = True
                     enemy.seeGun()
-
-                if player_choice == "fire" and myself.cocked and myself.bullets > 0:
+                if player_choice == "gun" and myself.cocked and myself.bullets > 0:
                     enemy.hp -= 4
                     enemy.stagger += 1
                     myself.bullets -= 1
@@ -106,7 +107,7 @@ class Combat:
                     enemy.cocked = True
                     myself.seeGun()
 
-                if enemy_choice == "fire" and enemy.gun and enemy.bullets > 0:
+                if enemy_choice == "gun" and enemy.cocked and enemy.bullets > 0:
                     myself.hp -= 4
                     myself.stagger += 1
                     enemy.bullets -= 1
@@ -116,8 +117,8 @@ class Combat:
             if player.hp <= 0:
                 game_state = 'dead'
 
-            myself.update()
-            enemy.update()
+            myself.combat_update()
+            enemy.combat_update()
 
             if player_choice == "escape" and myself.stagger == 0:
                 break
@@ -187,6 +188,9 @@ class Object:
         if not map[self.x + dx][self.y + dy].blocked:
             self.x += dx
             self.y += dy
+
+    def update(self):
+        return True
  
     def draw(self):
         #fade objects out of FOV
@@ -229,7 +233,7 @@ class Combatant(Object):
         self.stagger = 0
         self.cocked = False
 
-    def update(self):
+    def combat_update(self):
         if self.hp < self.maxHp/2:
             self.halfHp()
         if self.bullets < 3 and self.gun:
@@ -367,7 +371,7 @@ def render_ascii():
                     #it's visible
                     if wall:
                         #libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET )
-                        libtcod.console_put_char_ex(con, x, y, '#', libtcod.black, libtcod.white)
+                        libtcod.console_put_char_ex(con, x, y, '#', libtcod.black, libtcod.black)
                     else:
                         #libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET )
                         libtcod.console_put_char_ex(con, x, y, '.', libtcod.grey, libtcod.white)
@@ -404,7 +408,7 @@ def render_ascii():
     #libtcod.console_set_default_foreground(con, libtcod.black)
     #water = 10
     libtcod.console_print_ex(0, 1, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
-        'HP ' + str(player.hp) + '/' + str(player.maxHp))
+        'Health ' + str(player.hp) + '/' + str(player.maxHp))
     libtcod.console_print_ex(0, 15, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
         str(player.bullets) + ' ' + 'Bullets')
     libtcod.console_print_ex(0, 29, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
@@ -469,8 +473,8 @@ def handle_keys():
             player.water-=1
 
         #enable for thirst mechanic
-        if player.water == 0:
-            player_death(player)
+        #if player.water == 0:
+            #player_death(player)
  
 def player_death(player):
     global game_state
@@ -488,9 +492,13 @@ def intro():
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Ian Colquhoun and Wilson Hodgson")
     else:
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
-
     libtcod.console_flush()
 
+def ending():
+    game_state = 'dead'
+    libtcod.console_clear(0)
+    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "Mi hijo, you have found the Republic. Pray that it will last.")
+    libtcod.console_flush()
  
 #############################################
 # Initialization & Main Loop
@@ -512,17 +520,37 @@ def handleSeeGun():
 
 player = Combatant(25, 23, '@', 20, 2, 6, True, handleHit, handleLowAmmo, handleSeeGun, 10)
 
-holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
-discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
-holeInMound.scripts = {discoverMound.name:discoverMound}
-mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
+#holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
+#discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
+#holeInMound.scripts = {discoverMound.name:discoverMound}
+#mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
 
-tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
+houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last ten days in the wild.")
+houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.")
+houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", {houseWater.name:houseWater, houseSleep.name:houseSleep})
+#discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
+houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire. He turns around and grits his teeth. Mira, es un poco Rojo.")
+#houseSafeSearch.scripts = {discoverHouse.name:discoverHouse}
+
+if randint(0,1) == 0:
+    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
+else:
+    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
+
+#houseFight = Script("attack", )
+#houseEnemySearch = Script("search", "Peeking into the den, you find a young man in uniform burning books to make a fire. He turns around and grits his teeth. Mira, es un poco Rojo.")#, houseFight.name:houseFight})
+#npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
+#Combat(player, npc)
+#discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
+
+house = Landmark(30, 30, 'H', "House", [player], discoverHouse)
+
+tree = Object(11, 15, 't')
 
 npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
  
 #the list of objects with those two
-objects = [npc, player, mound, tree]
+objects = [npc, player, tree, house]
  
 #generate map (at this point it's not drawn to the screen)
 make_map()
@@ -555,8 +583,9 @@ while not libtcod.console_is_window_closed():
     #erase all objects at their old locations, before they move
     for object in objects:
         object.clear()
+        object.update()
  
-    objects[2].update()
+    #objects[3].update()
     if player.x == npc.x and player.y == npc.y:
         Combat(player, npc)
     #handle keys and exit game if needed
