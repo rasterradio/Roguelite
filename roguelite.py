@@ -1,5 +1,6 @@
 import libtcodpy as libtcod
 import textwrap
+from random import randint
  
 #actual size of the window
 SCREEN_WIDTH = 80
@@ -7,7 +8,7 @@ SCREEN_HEIGHT = 50
 
 #variables for GUI
 BAR_WIDTH = 20
-PANEL_HEIGHT = 7
+PANEL_HEIGHT = 1
 PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
 MSG_X = BAR_WIDTH + 2
 MSG_WIDTH = SCREEN_WIDTH - BAR_WIDTH - 2
@@ -16,8 +17,6 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 10
-
-LIMIT_FPS = 20  #20 frames-per-second maximum
 
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
@@ -84,6 +83,9 @@ class Combat:
             if enemy_choice == "fire" and enemy.gun and enemy.bullets > 0:
                 myself.hp -= 20
                 enemy.bullets -= 1
+
+            if player.hp <= 0:
+                game_state = 'dead'
 
             myself.update()
             enemy.update()
@@ -174,7 +176,7 @@ class Object:
 
 
 class Combatant(Object):
-    def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun):
+    def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun, water):
         Object.__init__(self, x, y, char)
         self.hp = hp
         self.maxHp = hp
@@ -185,6 +187,7 @@ class Combatant(Object):
         self.halfHp = halfHp
         self.lowBullets = lowBullets
         self.seeGun = seeGun
+        self.water = water
 
     def update(self):
         if self.hp < self.maxHp/2:
@@ -324,8 +327,22 @@ def render_all():
         libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
         y += 1
 
+    #show the player's stats
+    #render_bar(1, 1, BAR_WIDTH, 'HP', player.hp, player.maxHp,
+        #libtcod.light_red, libtcod.darker_red)
+
     #blit the contents of "panel" to the root console
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
+
+     #show the player's stats
+    #libtcod.console_set_default_foreground(con, libtcod.black)
+    #water = 10
+    libtcod.console_print_ex(0, 1, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
+        'HP ' + str(player.hp) + '/' + str(player.maxHp))
+    libtcod.console_print_ex(0, 15, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
+        str(player.bullets) + ' ' + 'Bullets')
+    libtcod.console_print_ex(0, 29, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
+         'Water ' + str(player.water) + '/10')
 
 def message(new_msg, color = libtcod.white):
     #split the message if necessary, among multiple lines
@@ -348,6 +365,10 @@ def handle_keys():
     if key.vk == libtcod.KEY_ENTER and key.lalt or key.vk == libtcod.KEY_ENTER and key.ralt:
         #Alt+Enter: toggle fullscreen
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+
+    #if game_state == 'dead':
+        #if key.vk != libtcod.KEY_NONE:
+            #game_state == 'playing'
  
     elif key.vk == libtcod.KEY_ESCAPE:
         return True  #exit game
@@ -357,34 +378,56 @@ def handle_keys():
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
             player.move(0, -1)
             fov_recompute = True
+            #if player.x and player.y != house x and y or town x and y:
+            player.water-=1
  
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
             player.move(0, 1)
             fov_recompute = True
+            player.water-=1
  
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
             player.move(-1, 0)
             fov_recompute = True
+            player.water-=1
  
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
             player.move(1, 0)
             fov_recompute = True
+            player.water-=1
+
+        #enable for thirst mechanic
+        if player.water == 0:
+            player_death(player)
  
 def player_death(player):
     global game_state
-    message('You died!', libtcod.red)
     game_state = 'dead'
+    libtcod.console_clear(0)
+    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
+    libtcod.console_flush()
+
+def intro():
+    game_state = 'dead'
+    libtcod.console_clear(0)
+    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "ROGUELITE")
+    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "This place is no longer safe, mi hijo. You must escape.")
+    if randint(0,1) == 0:
+        libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Ian Colquhoun and Wilson Hodgson")
+    else:
+        libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
+
+    libtcod.console_flush()
+
  
 #############################################
 # Initialization & Main Loop
 #############################################
  
-libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+libtcod.console_set_custom_font('lucida10x10_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'roguelite', False)
-libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
-
 
 def handleHit():
     print("OWCH")
@@ -394,8 +437,8 @@ def handleLowAmmo():
 
 def handleSeeGun():
     print("YIKES")
-#create object representing the player
-player = Combatant(25, 23, '@', 20, 2, 6, False, handleHit, handleLowAmmo, handleSeeGun)
+
+player = Combatant(25, 23, '@', 20, 2, 6, False, handleHit, handleLowAmmo, handleSeeGun, 10)
 
 
 holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
@@ -405,7 +448,7 @@ mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player
 
 tree = Object(11, 15, 't') #tree has to be grey, is there a way to make colours override default libtcod.black? Tree functions like non-object except for FOV, shouldn't have fade'
 
-npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun)
+npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
  
 #the list of objects with those two
 objects = [npc, player, mound, tree]
@@ -424,15 +467,19 @@ game_state = 'playing'
 
 #create the list of game messages and their colors, starts empty
 game_msgs = []
- 
-#a warm welcoming message!
-message('Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.')
+start_game = False
+#game_state = 'dead'
  
 while not libtcod.console_is_window_closed():
  
     #render the screen
-    render_all()
-    libtcod.console_flush()
+    if start_game == False:
+        intro()
+        if libtcod.console_wait_for_keypress(True).vk != libtcod.KEY_NONE:
+            start_game = True
+    if game_state != 'dead':
+        render_all()
+        libtcod.console_flush()
  
     #erase all objects at their old locations, before they move
     for object in objects:
