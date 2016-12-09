@@ -51,11 +51,11 @@ class Combat:
     #a class containing logic necessary to run during the combat state
     def __init__(self, myself, enemy):
         self.player_results_fist = read_grid_text('playerFistStagger.txt', 4, 4)
-        self.player_results_gun = read_grid_text('playerGunStagger.txt', 1, 4)
-        self.player_results_fire = read_grid_text('playerFireStagger.txt', 1, 4)
+        self.player_results_gun = read_grid_text('playerGunStagger.txt', 4, 1)
+        self.player_results_fire = read_grid_text('playerFireStagger.txt', 4, 1)
         self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 4, 4)
-        self.enemy_results_fist = read_grid_text('enemyFistStagger.txt', 3, 4)
-        self.enemy_results_gun = read_grid_text('enemyGunStagger.txt', 1, 4)
+        self.enemy_results_fist = read_grid_text('enemyFistStagger.txt', 4, 3)
+        self.enemy_results_gun = read_grid_text('enemyGunStagger.txt', 4, 1)
         self.enemy_results_fire = read_grid_text('enemyFireStagger.txt', 4, 4)
         self.state = ""
         self.choices = []
@@ -64,12 +64,6 @@ class Combat:
         self.run()
 
     def determineIntent(self, enemy):
-        if enemy.stagger == 0:
-            return "fist"
-        else:
-            if enemy.cocked == True:
-                enemy.cocked = False
-                return "gun"
             if randint(0,3) == 3 and enemy.bullets > 0:
                 return "gun" #do that twice!
             else:
@@ -83,10 +77,7 @@ class Combat:
         enemy_result = "ENEMYRESULT"
         while True:
             print self.state
-            if enemy.stagger > 0:
-                enemy.stagger -= 1
-            if myself.stagger > 0:
-                myself.stagger -= 1
+
 
             print "---STATS---\n"
             print "Bullets = " + str(myself.bullets)
@@ -98,17 +89,18 @@ class Combat:
             print ""
 
             player_choice = raw_input("=>")
-            if myself.stagger == 0:
+            if myself.stagger == False:
                 if player_choice == "fist":
                     enemy.hp -= myself.dmg
-                    myself_result = self.player_results_fist[enemy.stagger][myself.stagger]
+                    myself_result = self.player_results_fist[enemy.staggerLevel][myself.staggerLevel]
 
                 if player_choice == "gun" and myself.cocked and myself.bullets > 0:
                     enemy.hp -= 4
-                    if enemy.stagger < 3:
-                        enemy.stagger += 1
+                    enemy.stagger = True
+                    if enemy.staggerLevel < 3:
+                        enemy.staggerLevel += 1
                     myself.bullets -= 1
-                    myself_result = self.player_results_gun[enemy.stagger][myself.stagger] 
+                    myself_result = self.player_results_fire[enemy.staggerLevel][0]
 
                 if player_choice == "gun" and myself.cocked and myself.bullets <= 0:
                     myself_result = "You pull the trigger. Nothing. No shells left."
@@ -116,11 +108,11 @@ class Combat:
                 if player_choice == "gun" and myself.cocked == False:
                     myself.cocked = True
                     enemy.seeGun()
-                    myself_result = self.player_results_fire[enemy.stagger][myself.stagger]
+                    myself_result = self.player_results_gun[enemy.staggerLevel][0]
 
             if player_choice == "escape":
-                myself_result = self.player_results_escape[enemy.stagger][myself.stagger]
-                if myself.stagger < enemy.stagger:
+                myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
+                if myself.staggerLevel < enemy.staggerLevel:
                     break
             if enemy.dead:
                 myself.bullets += enemy.bullets
@@ -129,24 +121,32 @@ class Combat:
                 myself.gun = myself.gun or enemy.gun
                 break
 
+            myself.stagger = False
             print myself_result
+            myself_result = "\n"
 
             enemy_choice = self.determineIntent(self.enemy)
-            if enemy.stagger == 0:
+            if enemy.stagger == False:
                 if enemy_choice == "fist":
                     myself.hp -= enemy.dmg
-
-                if enemy_choice == "gun":
-                    enemy.cocked = True
-                    myself.seeGun()
+                    enemy_result = self.enemy_results_fist[enemy.staggerLevel][myself.staggerLevel]
 
                 if enemy_choice == "gun" and enemy.cocked and enemy.bullets > 0:
                     myself.hp -= 4
-                    if myself.stagger < 3:
-                        myself.stagger += 1
+                    myself.stagger = True
+                    if myself.staggerLevel < 3:
+                        myself.staggerLevel += 1
                     enemy.bullets -= 1
+                    enemy_result = self.enemy_results_fire[enemy.staggerLevel][myself.staggerLevel]
+                    
+                if enemy_choice == "gun" and enemy.cocked == False:
+                    enemy.cocked = True
+                    myself.seeGun()
+                    enemy_result = self.enemy_results_gun[enemy.staggerLevel][0]
 
             print enemy_result
+            enemy_result = "\n"
+            enemy.stagger = False
 
             if myself.hp <= 0:
                 game_state = 'dead'
@@ -159,7 +159,7 @@ class Combat:
             enemy.combat_update()
 
 class Script:
-    def __init__(self, name=None, data=None, scripts=None, event=lambda:None):
+    def __init__(self, name=None, data=None, event=lambda:None, scripts=None):
         self.name = name
         self.data = data
         self.scripts = scripts
@@ -178,6 +178,19 @@ class Script:
             if self.choice.lower() == x.lower():
                 return True
         return False
+
+    def connect(self, toConnect):
+        if isinstance(toConnect, Script):
+            if self.scripts:
+                self.scripts[toConnect.name] = toConnect
+            else:
+                self.scripts = {toConnect.name:toConnect}
+        else:
+            if self.scripts:
+                for script in toConnect:
+                    self.scripts[script.name] = script
+            else:
+                self.scripts = toConnect
 
     def run(self):
         while True:
@@ -264,12 +277,16 @@ class Combatant(Object):
         self.lowBullets = lowBullets
         self.seeGun = seeGun
         self.water = water
-        self.stagger = 0
+        self.staggerLevel = 0
+        self.stagger = False
         self.cocked = False
+        self.halfHpThreshold = False
 
     def combat_update(self):
-        if self.hp < self.maxHp/2:
+        if self.hp < self.maxHp/2 and self.halfHpThreshold == False:
+            self.halfHpThreshold = True
             self.halfHp()
+            self.stagger = True
         if self.bullets < 3 and self.gun:
             self.lowBullets()
         if self.hp <= 0:
@@ -323,17 +340,19 @@ def make_map():
 
 def read_grid_text(file, xRange, yRange):
     text_file = open(file, 'r')
-    text_data = [["" for a in range(xRange)] for b in range(yRange)]
+    text_data = [["" for a in range(yRange)] for b in range(xRange)]
     x = 0
     y = 0
     for line in text_file:
         for word in line.split(';'):
             if x < xRange and y < yRange:
                 text_data[x][y] = word.replace("^", "\n")
+                
+                #print file + " " + str(x) + " " + str(y) + " " + text_data[x][y]
             x += 1
         x = 0
         y += 1
-
+    print text_data
     return text_data
 
     #fill map with "unblocked" tiles
@@ -543,8 +562,8 @@ libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'roguelite', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
-def handleHit():
-    print("OWCH")
+def handleLow():
+    return None
 
 def handleLowAmmo():
     print("NoAmmo")
@@ -552,29 +571,36 @@ def handleLowAmmo():
 def handleSeeGun():
     print("YIKES")
 
-player = Combatant(25, 23, '@', 20, 2, 6, True, handleHit, handleLowAmmo, handleSeeGun, 10)
+player = Combatant(25, 23, '@', 20, 2, 6, True, handleLow, lambda:None, lambda:None, 10)
 
 #holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
 #discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
 #holeInMound.scripts = {discoverMound.name:discoverMound}
 #mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
+def handleCombat():
+    Combat(player, npc)
 
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last ten days in the wild.")
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.")
-houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", {houseWater.name:houseWater, houseSleep.name:houseSleep})
-#discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
-houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.")
-#houseSafeSearch.scripts = {discoverHouse.name:discoverHouse}
-
+houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
+discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", lambda: None,{houseSafeSearch.name:houseSafeSearch})
+houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.", handleCombat)
+houseSafeSearch.scripts = {discoverHouse.name:discoverHouse}
+houseEnemySearch.scripts = {houseWater.name:houseWater,houseSleep.name:houseSleep}
 if randint(0,3) == 0:
-    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
+    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.")
+    discoverHouse.connect(houseSafeSearch)
 if randint(0,3) == 1:
-    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
+    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.")
+    discoverHouse.connect(houseEnemySearch)
 if randint(0,3) == 2:
-    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseSafeSearch.name:houseSafeSearch})
-if randint(0,3) == 3:
-    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseEnemySearch.name:houseEnemySearch})
-
+    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.")
+    discoverHouse.connect(houseSafeSearch)
+if 3 == 3:
+    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.")
+    discoverHouse.connect(houseEnemySearch)
+houseSleep.connect(houseWater)
+houseWater.connect(houseSleep)
 #houseFight = Script("attack", )
 #houseEnemySearch = Script("search", "Peeking into the den, you find a young man in uniform burning books to make a fire. He turns around and grits his teeth. Mira, es un poco Rojo.")#, houseFight.name:houseFight})
 #npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
@@ -597,14 +623,12 @@ house = Landmark(30, 30, 'H', "House", [player], discoverHouse)
 
 tree = Object(11, 15, 't')
 
-npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
- 
-def handleCombat():
-    Combat(player, npc)
+npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 3, False, handleLow, lambda: None, lambda: None, 0)
+holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.", handleCombat)
+discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.")
+holeInMound.connect(discoverMound)
+discoverMound.connect(holeInMound)
 
-holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.", None, handleCombat)
-discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
-holeInMound.scripts = {discoverMound.name:discoverMound}
 mound = Landmark(player.x + 1, player.y + 2, '^', "Mound", [player], discoverMound)
 
 #the list of objects with those two
@@ -644,8 +668,7 @@ while not libtcod.console_is_window_closed():
         object.update()
  
     #objects[3].update()
-    if player.x == npc.x and player.y == npc.y:
-        Combat(player, npc)
+
     #handle keys and exit game if needed
     if VIEWSTATE == 'ascii':
         exit = handle_keys()
