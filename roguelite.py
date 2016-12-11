@@ -17,7 +17,7 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
-LIGHT_RADIUS = 20
+LIGHT_RADIUS = 5
 
 VIEWSTATE = "ascii"
 
@@ -77,6 +77,7 @@ class Combat:
 
     def run(self):
         os.system('CLS')
+        print ("-------ROJO-------")
         myself = self.myself
         myself_result = "PLAYERESULT"
         enemy = self.enemy
@@ -85,13 +86,14 @@ class Combat:
             print self.state
             if enemy.stagger > 0:
                 enemy.stagger -= 1
-            if myself.stagger > 0:
-                myself.stagger -= 1
+            #if myself.stagger > 0:
+                #myself.stagger -= 1
 
-            print "---STATS---\n"
+            print "------STATS------\n"
             print "Bullets = " + str(myself.bullets)
             print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-            print "---OPTIONS---\n"
+            print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
+            print "-----OPTIONS-----\n"
             print "Fist"
             print "Gun"
             print "Escape"
@@ -100,58 +102,83 @@ class Combat:
             player_choice = raw_input("=>")
             if myself.stagger == 0:
                 if player_choice == "fist":
+                    if myself.cocked == True:
+                        myself.cocked = False
                     enemy.hp -= myself.dmg
-                    myself_result = self.player_results_fist[enemy.stagger][myself.stagger]
+                    myself_result = self.player_results_fist[enemy.textStagger][myself.textStagger]
 
-                if player_choice == "gun" and myself.cocked and myself.bullets > 0:
+                if player_choice == "gun" and myself.cocked == True and myself.bullets > 0:
+                    myself_result = self.player_results_fire[enemy.textStagger][myself.textStagger] 
                     enemy.hp -= 4
                     if enemy.stagger < 3:
                         enemy.stagger += 1
+                        enemy.textStagger += 1
+                        enemy.staggered = True
                     myself.bullets -= 1
-                    myself_result = self.player_results_gun[enemy.stagger][myself.stagger] 
 
-                if player_choice == "gun" and myself.cocked and myself.bullets <= 0:
+                if player_choice == "gun" and myself.cocked and myself.bullets == 0:
                     myself_result = "You pull the trigger. Nothing. No shells left."
                
                 if player_choice == "gun" and myself.cocked == False:
                     myself.cocked = True
-                    enemy.seeGun()
-                    myself_result = self.player_results_fire[enemy.stagger][myself.stagger]
+                    myself_result = self.player_results_gun[enemy.textStagger][myself.textStagger]
 
-            if player_choice == "escape":
-                myself_result = self.player_results_escape[enemy.stagger][myself.stagger]
-                if myself.stagger < enemy.stagger:
+                if player_choice == "escape" and enemy.dead == False:
+                    if myself.cocked == True:
+                        myself.cocked = False
+                    #os.system('CLS')
+                    myself_result = self.player_results_escape[enemy.textStagger][myself.textStagger]
+                    print myself_result
+                    if enemy.staggered == True:
+                        break
+                if player_choice == "escape" and enemy.dead == True:
+                    myself.bullets += enemy.bullets
+                    if enemy.bullets > 0:
+                        print "You ruffle through his coat, collecting his bullets."
+                    if myself.bullets > 6:
+                        myself.bullets = 6
+                    myself.gun = myself.gun or enemy.gun
                     break
-            if enemy.dead:
-                myself.bullets += enemy.bullets
-                if myself.bullets > 6:
-                    myself.bullets = 6
-                myself.gun = myself.gun or enemy.gun
-                break
+                else:
+                    myself_result = "You catch your breath."
 
-            print myself_result
+                os.system('CLS')
+                print ("-------ROJO-------")
+
+                print myself_result
+                myself_result = ""
+                if myself.stagger > 0:
+                    myself.stagger -= 1
 
             enemy_choice = self.determineIntent(self.enemy)
             if enemy.stagger == 0:
                 if enemy_choice == "fist":
                     myself.hp -= enemy.dmg
+                    enemy_result = self.enemy_results_fist[enemy.textStagger][myself.textStagger]
 
-                if enemy_choice == "gun":
+                if enemy_choice == "gun" and enemy.cocked == False:
                     enemy.cocked = True
                     myself.seeGun()
+                    enemy_result = self.enemy_results_gun[enemy.textStagger][myself.textStagger]
 
                 if enemy_choice == "gun" and enemy.cocked and enemy.bullets > 0:
                     myself.hp -= 4
                     if myself.stagger < 3:
                         myself.stagger += 1
+                        myself.textStagger += 1
                     enemy.bullets -= 1
+                    enemy_result = self.enemy_results_fire[enemy.textStagger][myself.textStagger]
 
-            print enemy_result
+                print enemy_result
+                enemy_result = ""
 
             if myself.hp <= 0:
                 game_state = 'dead'
                 libtcod.console_clear(0)
                 libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
+                os.system('CLS')
+                print ("-------ROJO-------")
+                print "Re-launch the game to find the Republic again."
                 libtcod.console_flush()
                 break
 
@@ -164,6 +191,7 @@ class Script:
         self.data = data
         self.scripts = scripts
         self.event = event
+        self.choice = "DEFAULT"
 
     def __str__(self):
         return str(self.name)        
@@ -191,10 +219,14 @@ class Script:
             if self.scripts:
                 for scr in self.scripts.values():
                     print(scr.name)
-            if not self.getChoice():
+            if self.choice.lower() == "/":
+                os.system('CLS')
+                print"-------ROJO-------"
                 break
+            if not self.getChoice() and self.choice.lower() != "/":
+                self.getChoice()
             if self.scripts:
-                for y in self.scripts:
+                for y in self.scripts.keys():
                     if self.choice.lower() == y.lower():
                         self = self.scripts.get(y)
 
@@ -265,6 +297,8 @@ class Combatant(Object):
         self.seeGun = seeGun
         self.water = water
         self.stagger = 0
+        self.staggered = False
+        self.textStagger = 0
         self.cocked = False
 
     def combat_update(self):
@@ -274,7 +308,6 @@ class Combatant(Object):
             self.lowBullets()
         if self.hp <= 0:
             self.dead = True
-
 
 class Landmark(Object):
     #a location on the map that you can enter
@@ -488,7 +521,7 @@ def handle_keys():
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
             player.move(0, -1)
             fov_recompute = True
-            #if player.x and player.y != house x and y or town x and y:
+            #if player.x == town.x and player.y == town.y or player.x == town1 and player.y == town1.y:
             player.water-=1
  
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
@@ -507,20 +540,25 @@ def handle_keys():
             player.water-=1
 
         #enable for thirst mechanic
-        #if player.water == 0:
-            #player_death(player)
+        if player.water == 0:
+            player_death(player)
  
 def player_death(player):
     global game_state
     game_state = 'dead'
     libtcod.console_clear(0)
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
+    os.system('CLS')
+    print ("-------ROJO-------")
+    print "Re-launch the game to find the Republic again."
     libtcod.console_flush()
 
 def intro():
+    os.system('CLS')
+    print ("-------ROJO-------")
     game_state = 'dead'
     libtcod.console_clear(0)
-    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "ROGUELITE")
+    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "ROJO")
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "This place is no longer safe, mi hijo. You must escape.")
     if randint(0,1) == 0:
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Ian Colquhoun and Wilson Hodgson")
@@ -531,7 +569,12 @@ def intro():
 def ending():
     game_state = 'dead'
     libtcod.console_clear(0)
+    libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "END")
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "Mi hijo, you have found the Republic. Pray that it will last.")
+    if randint(0,1) == 0:
+        libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Ian Colquhoun and Wilson Hodgson")
+    else:
+        libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
     libtcod.console_flush()
  
 #############################################
@@ -539,76 +582,130 @@ def ending():
 #############################################
  
 libtcod.console_set_custom_font('lucida10x10_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'roguelite', False)
+libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'rojo', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
 def handleHit():
-    print("OWCH")
+    print("")
 
 def handleLowAmmo():
-    print("NoAmmo")
+    print("")
 
 def handleSeeGun():
-    print("YIKES")
+    print("")
 
-player = Combatant(25, 23, '@', 20, 2, 6, True, handleHit, handleLowAmmo, handleSeeGun, 10)
+def handleCombat():
+    npc = Combatant(-1, -1, '&', 10, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
+    Combat(player, npc)
+    Script = ("", "", {townWater.name:townWater, townSleep.name:townSleep})
 
-#holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.")
+def refillWater():
+    player.water = 10
+
+def lightSleep():
+    if player.hp >= 10:
+        player.hp = 20
+    else:
+        player.hp = 10
+
+def deepSleep():
+    player.hp = 20
+
+def landmarkVisit():
+    player.water += 1
+
+def handleEnding():
+    ending()
+
+player = Combatant(40, 25, '@', 10, 2, 3, True, handleHit, handleLowAmmo, handleSeeGun, 12)
+
+houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.", None, refillWater)
+houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.", None, lightSleep)
+houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", {houseWater.name:houseWater, houseSleep.name:houseSleep})
+houseAttack = Script("Attack", "", None, handleCombat)
+houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.", {houseAttack.name:houseAttack})
+if player.hp < 10 and player.hp > 0:
+    houseWater.scripts = {houseSleep.name:houseSleep}
+if player.water < 10 and player.water > 0:
+    houseSleep.scripts = {houseWater.name:houseWater}
+
+#houseChoice = randint(0,3)
+
+discoverHouse1 = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
+discoverHouse2 = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
+discoverHouse3 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseSafeSearch.name:houseSafeSearch})
+discoverHouse4 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseEnemySearch.name:houseEnemySearch})
+
+townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last twelve days in the wild.", None, refillWater)
+townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.", None, deepSleep)
+townAttack = Script("Attack", "", None, handleCombat)
+townEnemy = Script("Search", "As you move through the town, you find all eyes on you.\nA soldier confronts you in an alley. Papelas, he asks, you have none.\nBefore he can draw his weapon you've punched him in the throat.", {townAttack.name:townAttack})
+
+discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while nuns shovel hay.\nThe wooden cross has been covered by a Falangist banner.", {townEnemy.name:townEnemy})
+discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", {townEnemy.name:townEnemy})
+
+discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
+
+town = Landmark(33, 23, 'T', "Town", [player], discoverTown1)
+town1 = Landmark(32, 12, 'T', "Town", [player], discoverTown2)
+town2 = Landmark(39, 36, 'T', "Town", [player], discoverTown1)
+
+house = Landmark(39, 21, 'H', "House", [player], discoverHouse1)
+house1 = Landmark(32, 18, 'H', "House", [player], discoverHouse4)
+house2 = Landmark(51, 24, 'H', "House", [player], discoverHouse2)
+
+tree = Object(17, 15, 't')
+tree1 = Object(18, 15, 't')
+tree2 = Object(19, 15, 't')
+tree3 = Object(20, 15, 't')
+tree4 = Object(21, 15, 't')
+tree5 = Object(22, 15, 't')
+tree6 = Object(23, 15, 't')
+tree7 = Object(17, 14, 't')
+tree8= Object(18, 14, 't')
+tree9 = Object(19, 14, 't')
+tree10 = Object(20, 14, 't')
+tree11 = Object(21, 14, 't')
+tree12= Object(22, 14, 't')
+tree13= Object(23, 14, 't')
+tree14= Object(18, 15, 't')
+tree15= Object(18, 15, 't')
+tree16= Object(18, 15, 't')
+tree17= Object(18, 15, 't')
+tree18= Object(18, 15, 't')
+tree19= Object(18, 15, 't')
+tree20= Object(18, 15, 't')
+tree21= Object(18, 15, 't')
+tree22= Object(18, 15, 't')
+tree23= Object(18, 15, 't')
+tree24= Object(18, 15, 't')
+tree25= Object(18, 15, 't')
+tree26= Object(18, 15, 't')
+tree27= Object(18, 15, 't')
+tree28= Object(18, 15, 't')
+
+npc = Combatant(-1, -1, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
+
+border = Landmark(35, 11, 'B', "Border", [player], discoverBorder)
+border1 = Landmark(36, 11, 'B', "Border", [player], discoverBorder)
+border2 = Landmark(37, 11, 'B', "Border", [player], discoverBorder)
+border3= Landmark(38, 11, 'B', "Border", [player], discoverBorder)
+border4= Landmark(39, 11, 'B', "Border", [player], discoverBorder)
+border5= Landmark(40, 11, 'B', "Border", [player], discoverBorder)
+border6= Landmark(41, 11, 'B', "Border", [player], discoverBorder)
+border7= Landmark(42, 11, 'B', "Border", [player], discoverBorder)
+border8= Landmark(43, 11, 'B', "Border", [player], discoverBorder)
+border9= Landmark(44, 11, 'B', "Border", [player], discoverBorder)
+border10= Landmark(45, 11, 'B', "Border", [player], discoverBorder)
+
+#holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.", None, handleCombat)
 #discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
 #holeInMound.scripts = {discoverMound.name:discoverMound}
-#mound = Landmark(SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT/2 + 1, '^', "Mound", [player], discoverMound)
-
-houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last ten days in the wild.")
-houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.")
-houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", {houseWater.name:houseWater, houseSleep.name:houseSleep})
-#discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
-houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.")
-#houseSafeSearch.scripts = {discoverHouse.name:discoverHouse}
-
-if randint(0,3) == 0:
-    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseSafeSearch.name:houseSafeSearch})
-if randint(0,3) == 1:
-    discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
-if randint(0,3) == 2:
-    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseSafeSearch.name:houseSafeSearch})
-if randint(0,3) == 3:
-    discoverHouse = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", {houseEnemySearch.name:houseEnemySearch})
-
-#houseFight = Script("attack", )
-#houseEnemySearch = Script("search", "Peeking into the den, you find a young man in uniform burning books to make a fire. He turns around and grits his teeth. Mira, es un poco Rojo.")#, houseFight.name:houseFight})
-#npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
-#Combat(player, npc)
-#discoverHouse = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", {houseEnemySearch.name:houseEnemySearch})
-
-#townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last ten days in the wild.")
-#townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.")
-#townEnemy = Script("Search", "As you move through the town, you find all eyes on you.\nA soldier confronts you in an alley. Papelas, he asks, you have none.\nBefore he can draw his weapon you've punched him in the throat.")
-
-
-#if randint(0,1) == 0:
-    #discoverTown = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while nuns shovel hay.\nThe wooden cross has been covered by a Falangist banner.")
-#else:
-    #discoverTown = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.")
-
-#town = Landmark(25, 25, "T", "Town", [player], discoverTown)
-
-house = Landmark(30, 30, 'H', "House", [player], discoverHouse)
-
-tree = Object(11, 15, 't')
-
-npc = Combatant(SCREEN_WIDTH/2 - 5, SCREEN_HEIGHT/2, '&', 20, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
- 
-def handleCombat():
-    Combat(player, npc)
-
-holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.", None, handleCombat)
-discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
-holeInMound.scripts = {discoverMound.name:discoverMound}
-mound = Landmark(player.x + 1, player.y + 2, '^', "Mound", [player], discoverMound)
+#mound = Landmark(player.x + 1, player.y + 2, '^', "Mound", [player], discoverMound)
 
 #the list of objects with those two
-objects = [npc, player, tree, house]
+objects = [npc, player, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, town, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2, town1, town2]
  
 #generate map (at this point it's not drawn to the screen)
 make_map()
@@ -646,6 +743,11 @@ while not libtcod.console_is_window_closed():
     #objects[3].update()
     if player.x == npc.x and player.y == npc.y:
         Combat(player, npc)
+
+    if player.x == house.x and player.y == house.y:
+        houseChoice = randint(0,3)
+        player.water += 1
+
     #handle keys and exit game if needed
     if VIEWSTATE == 'ascii':
         exit = handle_keys()
