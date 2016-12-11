@@ -1,0 +1,25 @@
+----Game Development Guideline----
+
+// fill out GAME before development (this portion is like a design document)
+// fill out SELF throughout or after development (this portion is like a review document)
+
+GAME:
+{
+    overview (the game's purpose):
+
+    goals (what features allow the game to achieve that purpose):
+
+    procedure (what steps do we take, and what problems might we face while reaching game goals):
+}
+
+SELF:
+{
+    inspiration:
+        what was the inspiration for this game?
+    production:
+        what makes this game possible? what new things are we trying?
+    inspection:
+        what went wrong? record critisizms here
+    revision:
+        how do we learn from our mistakes to make sure the next game is better?
+}
