@@ -18,6 +18,7 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 5
+#test
 
 VIEWSTATE = "ascii"
 
