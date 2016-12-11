@@ -212,6 +212,7 @@ class Script:
                 self.scripts = toConnect
 
     def run(self):
+        self.choice = "DEFAULT"
         while True:
             print
             print(self.data)
@@ -227,9 +228,7 @@ class Script:
                 os.system('CLS')
                 print"-------ROJO-------"
                 break
-            if not self.getChoice() and self.choice.lower() != "/":
-                self.getChoice()
-            if self.scripts:
+            if self.getChoice() and self.scripts:
                 for y in self.scripts.keys():
                     if self.choice.lower() == y.lower():
                         self = self.scripts.get(y)
