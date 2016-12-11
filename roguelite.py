@@ -118,7 +118,7 @@ class Combat:
                 if myself.cocked == True:
                     myself.cocked = False
                 #os.system('CLS')
-                myself_result = self.player_results_escape[enemy.textStagger][myself.textStagger]
+                myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
                 print myself_result
                 if enemy.staggered == True:
                     break
@@ -603,7 +603,7 @@ def handleSeeGun():
     print("")
 
 def handleCombat():
-    npc = Combatant(-1, -1, '&', 10, 1, 0, False, handleHit, handleLowAmmo, handleSeeGun, 0)
+    npc = Combatant(-1, -1, '&', 10, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 0)
     Combat(player, npc)
     Script = ("", "", lambda: None, {townWater.name:townWater, townSleep.name:townSleep})
 
