@@ -18,7 +18,6 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 5
-#test
 
 VIEWSTATE = "ascii"
 
@@ -65,65 +64,75 @@ class Combat:
         self.run()
 
     def determineIntent(self, enemy):
-            if randint(0,3) == 3 and enemy.bullets > 0:
-                return "gun" #do that twice!
+            if randint(0,1) == 1 and enemy.bullets > 0 and enemy.cocked == False or enemy.cocked == True:
+                return "gun"
             else:
                 return "fist"
 
     def run(self):
         os.system('CLS')
-        print ("-------ROJO-------")
         myself = self.myself
         myself_result = "PLAYERESULT"
         enemy = self.enemy
         enemy_result = "ENEMYRESULT"
+        enemy_choice = ""
         while True:
-            print self.state
+            if myself.stagger == True:
+                myself_result = ""
+            if enemy.stagger == True:
+                enemy_result = ""
 
-            print "------STATS------\n"
-            print "Bullets = " + str(myself.bullets)
-            print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-            print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
-            print "-----OPTIONS-----\n"
-            print "Fist"
-            print "Gun"
-            print "Escape"
-            print ""
-
-            player_choice = raw_input("=>")
             if myself.stagger == False:
+                print "------STATS------\n"
+                print "Bullets = " + str(myself.bullets)
+                print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
+                print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
+                print "Enemy stagger = " + str(enemy_choice) + "\n"
+                print "-----OPTIONS-----\n"
+                print "Fist"
+                print "Gun"
+                print "Escape"
+                print ""
+
+                player_choice = raw_input("=>")
                 if player_choice == "fist":
                     if myself.cocked == True:
                         myself.cocked = False
                     enemy.hp -= myself.dmg
-                    myself_result = self.player_results_fist[enemy.staggerLevel][myself.staggerLevel]
+                    if enemy.hp > 0:    
+                        myself_result = self.player_results_fist[enemy.staggerLevel][myself.staggerLevel]
+                    else:
+                        myself_result = "You drive your boot down, the vibrations of the snapping of bone and sinew rushing up your leg to meet your spine."
 
                 if player_choice == "gun" and myself.cocked == True and myself.bullets > 0:
-                    enemy.hp -= 4
-                    enemy.stagger = True
-                    if enemy.staggerLevel < 3:
-                        enemy.staggerLevel += 1
-                    myself.bullets -= 1
-                    myself_result = self.player_results_fire[enemy.staggerLevel][0]
+                    if enemy.hp > 0:
+                        enemy.hp -= 4
+                        enemy.stagger = True
+                        if enemy.staggerLevel < 3:
+                            enemy.staggerLevel += 1
+                        myself.bullets -= 1
+                        myself_result = self.player_results_fire[enemy.staggerLevel][0]
+                    else:
+                        myself_result = "You fire a shot into the crimson mulch."
 
                 if player_choice == "gun" and myself.cocked and myself.bullets == 0:
                     myself_result = "You pull the trigger. Nothing. No shells left."
                
                 if player_choice == "gun" and myself.cocked == False:
                     myself.cocked = True
-                    enemy.seeGun()
-                    myself_result = self.player_results_gun[enemy.staggerLevel][0]
+                    if enemy.hp > 0:
+                        myself_result = self.player_results_gun[enemy.staggerLevel][0]
+                    else:
+                        myself_result =  "You pull out your gun."
 
-            if player_choice == "escape" and enemy.dead == False:
+            if player_choice == "escape" and enemy.hp > 0:
                 myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
                 if myself.cocked == True:
                     myself.cocked = False
-                #os.system('CLS')
                 myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
-                print myself_result
-                if enemy.staggered == True:
+                if enemy.stagger == True:
                     break
-            if player_choice == "escape" and enemy.dead == True:
+            if player_choice == "escape" and enemy.hp <= 0:
                 myself.bullets += enemy.bullets
                 if enemy.bullets > 0:
                     print "You ruffle through his coat, collecting his bullets."
@@ -132,22 +141,38 @@ class Combat:
                     myself.gun = myself.gun or enemy.gun
                     break
                 else:
-                    myself_result = "You catch your breath."
-
+                    break
+                    
                 os.system('CLS')
-                print ("-------ROJO-------")
+                print ("------ROJO-------")
 
+            if myself.stagger == True:
+                print "------STATS------\n"
+                print "Bullets = " + str(myself.bullets)
+                print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
+                print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
+                print "----STAGGERED----\n"
+                print "You focus on drowning out the pain. Inhale. Exhale."
+                player_choice = raw_input("=>")
+                myself_result = ""
+                enemy_result = ""
+                os.system('CLS')
             myself.stagger = False
-            print myself_result
-            myself_result = "\n"
 
-            enemy_choice = self.determineIntent(self.enemy)
-            if enemy.stagger == False:
+            if myself_result != "":
+                print myself_result
+
+            if enemy.stagger == False and enemy.hp > 0:
+                enemy_choice = self.determineIntent(self.enemy)
                 if enemy_choice == "fist":
                     myself.hp -= enemy.dmg
+                    #if canFistStaggerEnemy == True and player.hp < player.maxHp/2:
+                            #player.stagger = True
+                            #canFistStaggerEnemy = False
+                            #player.staggerLevel += 1
                     enemy_result = self.enemy_results_fist[enemy.staggerLevel][myself.staggerLevel]
 
-                if enemy_choice == "gun" and enemy.cocked and enemy.bullets > 0:
+                if enemy_choice == "gun" and enemy.cocked == True and enemy.bullets > 0:
                     myself.hp -= 4
                     myself.stagger = True
                     if myself.staggerLevel < 3:
@@ -157,25 +182,29 @@ class Combat:
                     
                 if enemy_choice == "gun" and enemy.cocked == False:
                     enemy.cocked = True
-                    myself.seeGun()
                     enemy_result = self.enemy_results_gun[enemy.staggerLevel][0]
+            
+            if enemy.stagger == True and enemy.hp > 0:
+                enemy_result = "Huffing, he climbs back to his feet."
+            if enemy.hp <= 0:
+                enemy_result = ""
 
-            print enemy_result
-            enemy_result = "\n"
+            if enemy_result != "":
+                print enemy_result
             enemy.stagger = False
 
-            if myself.hp <= 0:
+            if myself.hp == 0:
                 game_state = 'dead'
                 libtcod.console_clear(0)
                 libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
                 os.system('CLS')
-                print ("-------ROJO-------")
+                print ("------ROJO-------")
                 print "Re-launch the game to find the Republic again."
                 libtcod.console_flush()
                 break
-
-            myself.combat_update()
-            enemy.combat_update()
+            else:
+                myself.combat_update()
+                enemy.combat_update()
 
 class Script:
     def __init__(self, name=None, data=None, event=lambda:None, scripts=None):
@@ -227,7 +256,7 @@ class Script:
                     print(scr.name)
             if self.choice.lower() == "/":
                 os.system('CLS')
-                print"-------ROJO-------"
+                print"------ROJO-------"
                 break
             if self.getChoice() and self.scripts:
                 for y in self.scripts.keys():
@@ -295,7 +324,6 @@ class Combatant(Object):
         self.dmg = dmg
         self.bullets = bullets
         self.gun = gun
-        self.dead = 0
         self.halfHp = halfHp
         self.lowBullets = lowBullets
         self.seeGun = seeGun
@@ -310,10 +338,10 @@ class Combatant(Object):
             self.halfHpThreshold = True
             self.halfHp()
             self.stagger = True
+        if self.cocked == True and self.stagger == True:
+            self.cocked = False
         if self.bullets < 3 and self.gun:
             self.lowBullets()
-        if self.hp <= 0:
-            self.dead = True
 
 class Landmark(Object):
     #a location on the map that you can enter
@@ -374,7 +402,7 @@ def read_grid_text(file, xRange, yRange):
             x += 1
         x = 0
         y += 1
-    print text_data
+    #print text_data
     return text_data
 
     #fill map with "unblocked" tiles
@@ -557,13 +585,13 @@ def player_death(player):
     libtcod.console_clear(0)
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
     os.system('CLS')
-    print ("-------ROJO-------")
+    print ("------ROJO-------")
     print "Re-launch the game to find the Republic again."
     libtcod.console_flush()
 
 def intro():
     os.system('CLS')
-    print ("-------ROJO-------")
+    print ("------ROJO-------")
     game_state = 'dead'
     libtcod.console_clear(0)
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "ROJO")
@@ -604,7 +632,7 @@ def handleSeeGun():
     print("")
 
 def handleCombat():
-    npc = Combatant(-1, -1, '&', 10, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 0)
+    npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
     Combat(player, npc)
     Script = ("", "", lambda: None, {townWater.name:townWater, townSleep.name:townSleep})
 
@@ -637,8 +665,6 @@ if player.hp < 10 and player.hp > 0:
     houseWater.scripts = {houseSleep.name:houseSleep}
 if player.water < 10 and player.water > 0:
     houseSleep.scripts = {houseWater.name:houseWater}
-
-#houseChoice = randint(0,3)
 
 discoverHouse1 = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", lambda: None, {houseSafeSearch.name:houseSafeSearch})
 discoverHouse2 = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", lambda: None, {houseEnemySearch.name:houseEnemySearch})
