@@ -634,7 +634,6 @@ def handleSeeGun():
 def handleCombat():
     npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
     Combat(player, npc)
-    Script = ("", "", lambda: None, {townWater.name:townWater, townSleep.name:townSleep})
 
 def refillWater():
     player.water = 10
@@ -680,6 +679,11 @@ discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball arou
 discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
 
 discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
+
+houseAttack.connect(houseWater)
+houseAttack.connect(houseSleep)
+townAttack.connect(townWater)
+townAttack.connect(townSleep)
 
 town = Landmark(33, 23, 'T', "Town", [player], discoverTown1)
 town1 = Landmark(32, 12, 'T', "Town", [player], discoverTown2)
