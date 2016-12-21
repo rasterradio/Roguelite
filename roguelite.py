@@ -64,7 +64,7 @@ class Combat:
         self.run()
 
     def determineIntent(self, enemy):
-            if randint(0,1) == 1 and enemy.bullets > 0 and enemy.cocked == False or enemy.cocked == True:
+            if randint(0,2) == 2 and enemy.bullets > 0 and enemy.cocked == False or enemy.cocked == True:
                 return "gun"
             else:
                 return "fist"
@@ -86,8 +86,6 @@ class Combat:
                 print "------STATS------\n"
                 print "Bullets = " + str(myself.bullets)
                 print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-                print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
-                print "Enemy stagger = " + str(enemy_choice) + "\n"
                 print "-----OPTIONS-----\n"
                 print "Fist"
                 print "Gun"
@@ -102,7 +100,7 @@ class Combat:
                     if enemy.hp > 0:    
                         myself_result = self.player_results_fist[enemy.staggerLevel][myself.staggerLevel]
                     else:
-                        myself_result = "You drive your boot down, the vibrations of the snapping of bone and sinew rushing up your leg to meet your spine."
+                        myself_result =  "You drive your boot down, the vibrations of the snapping of bone and sinew\nrushing up your leg to meet your spine."
 
                 if player_choice == "gun" and myself.cocked == True and myself.bullets > 0:
                     if enemy.hp > 0:
@@ -129,8 +127,7 @@ class Combat:
                 myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
                 if myself.cocked == True:
                     myself.cocked = False
-                myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
-                if enemy.stagger == True:
+                if enemy.stagger > myself.stagger:
                     break
             if player_choice == "escape" and enemy.hp <= 0:
                 myself.bullets += enemy.bullets
@@ -141,18 +138,20 @@ class Combat:
                     myself.gun = myself.gun or enemy.gun
                     break
                 else:
+                    myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
                     break
                     
-                os.system('CLS')
-                print ("------ROJO-------")
+            os.system('CLS')
+            print ("------ROJO-------")
 
             if myself.stagger == True:
                 print "------STATS------\n"
                 print "Bullets = " + str(myself.bullets)
                 print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
                 print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
-                print "----STAGGERED----\n"
+                print "----STAGGERED----"
                 print "You focus on drowning out the pain. Inhale. Exhale."
+                myself_result = ""
                 player_choice = raw_input("=>")
                 myself_result = ""
                 enemy_result = ""
@@ -634,6 +633,16 @@ def handleSeeGun():
 def handleCombat():
     npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
     Combat(player, npc)
+    os.system('CLS')
+    print ("------ROJO-------")
+    print ("[Press Enter]")
+
+#def townCombat():
+    #npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
+    #Combat(player, npc)
+    #os.system('CLS')
+    #print ("------ROJO-------")
+    #print ("You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.\n")
 
 def refillWater():
     player.water = 10
@@ -655,9 +664,9 @@ def handleEnding():
 
 player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 12)
 
-houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.", refillWater)
-houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.", lightSleep)
-houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
+houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
+houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n[Press '/' to leave]", lightSleep)
+houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.\n[Press '/' to leave]", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
 houseAttack = Script("Attack", "", handleCombat)
 houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.", lambda: None, {houseAttack.name:houseAttack})
 if player.hp < 10 and player.hp > 0:
@@ -670,20 +679,19 @@ discoverHouse2 = Script("Leave", "An old house sets on the hill, the paint yello
 discoverHouse3 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda:None, {houseSafeSearch.name:houseSafeSearch})
 discoverHouse4 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda: None, {houseEnemySearch.name:houseEnemySearch})
 
-townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last twelve days in the wild.", refillWater)
-townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.", deepSleep)
+townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
+townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.\n[Press '/' to leave]", deepSleep)
 townAttack = Script("Attack", "", handleCombat)
+townSafe = Script("", "You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.\n[Press '/' to leave]", lambda: None, {houseWater.name:townWater, houseSleep.name:townSleep})
 townEnemy = Script("Search", "As you move through the town, you find all eyes on you.\nA soldier confronts you in an alley. Papelas, he asks, you have none.\nBefore he can draw his weapon you've punched him in the throat.", lambda: None, {townAttack.name:townAttack})
 
-discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while nuns shovel hay.\nThe wooden cross has been covered by a Falangist banner.", lambda: None, {townEnemy.name:townEnemy})
+discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while\nnuns shovel hay. The wooden cross has been covered by a Falangist banner.", lambda: None, {townEnemy.name:townEnemy})
 discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
 
 discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
 
-houseAttack.connect(houseWater)
-houseAttack.connect(houseSleep)
-townAttack.connect(townWater)
-townAttack.connect(townSleep)
+townAttack.connect(townSafe)
+houseAttack.connect(houseSafeSearch)
 
 town = Landmark(33, 23, 'T', "Town", [player], discoverTown1)
 town1 = Landmark(32, 12, 'T', "Town", [player], discoverTown2)

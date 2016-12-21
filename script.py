@@ -6,7 +6,7 @@ import sys
 sys.argv.append('py2exe')
  
 # The filename of the script you use to start your program.
-target_file = 'main.py'
+target_file = 'roguelite.py'
  
 # The root directory containing your assets, libraries, etc.
 assets_dir = '.\\'
