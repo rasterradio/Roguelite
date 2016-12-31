@@ -128,6 +128,8 @@ class Combat:
                 if myself.cocked == True:
                     myself.cocked = False
                 if enemy.stagger > myself.stagger:
+                    print self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
+                    raw_input()
                     break
             if player_choice == "escape" and enemy.hp <= 0:
                 myself.bullets += enemy.bullets
@@ -136,6 +138,7 @@ class Combat:
                     if myself.bullets > 6:
                         myself.bullets = 6
                     myself.gun = myself.gun or enemy.gun
+                    raw_input()
                     break
                 else:
                     myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
@@ -633,9 +636,6 @@ def handleSeeGun():
 def handleCombat():
     npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
     Combat(player, npc)
-    os.system('CLS')
-    print ("------ROJO-------")
-    print ("[Press Enter]")
 
 #def townCombat():
     #npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
