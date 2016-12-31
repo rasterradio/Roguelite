@@ -2,7 +2,19 @@ import libtcodpy as libtcod
 import textwrap
 from random import randint
 import os
- 
+#import Tile
+#import Combat
+#import Script
+#import Object
+#import Landmark
+#import Combatant
+
+from Tile import *
+from Combat import *
+from Script import *
+from ObjectMod import Object
+from Landmark import *
+from Combatant import *
 #actual size of the window
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
@@ -25,415 +37,20 @@ color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
 color_light_ground = libtcod.Color(200, 180, 50) 
- 
-class Tile:
-    #a tile of the map and its properties
-    def __init__(self, blocked, block_sight = None):
-        self.blocked = blocked
-
-        #all tiles start unexplored
-        self.explored = False
-        #by default, if a tile is blocked, it also blocks sight
-        if block_sight is None: block_sight = blocked
-        self.block_sight = block_sight
-
-#define combatants which enemies and player will inherit from. combatants will have anonymous functions which will run on defined events based on combat data
-#event examples, event on low hp, event on low bullets, event on being hit 4 times in a row, event on hitting the player 4 times in a row, 
-#event on the player taking out a gun, event on the enemy taking out a gun   
-#event on the enemy dying
-#event on the player dying
-#combatant stats include hp, dmg, bullets, gun
-# player and enemy choices are stored in the combat class, combat class also contains info that is printed to the screen,
-#including player choices and current state of battle
-
-
-class Combat:
-    #a class containing logic necessary to run during the combat state
-    def __init__(self, myself, enemy):
-        self.player_results_fist = read_grid_text('playerFistStagger.txt', 4, 4)
-        self.player_results_gun = read_grid_text('playerGunStagger.txt', 4, 1)
-        self.player_results_fire = read_grid_text('playerFireStagger.txt', 4, 1)
-        self.player_results_escape = read_grid_text('playerEscapeStagger.txt', 4, 4)
-        self.enemy_results_fist = read_grid_text('enemyFistStagger.txt', 4, 3)
-        self.enemy_results_gun = read_grid_text('enemyGunStagger.txt', 4, 1)
-        self.enemy_results_fire = read_grid_text('enemyFireStagger.txt', 4, 4)
-        self.state = ""
-        self.choices = []
-        self.enemy = enemy
-        self.myself = myself
-        self.run()
-
-    def determineIntent(self, enemy):
-            if randint(0,2) == 2 and enemy.bullets > 0 and enemy.cocked == False or enemy.cocked == True:
-                return "gun"
-            else:
-                return "fist"
-
-    def run(self):
-        os.system('CLS')
-        myself = self.myself
-        myself_result = "PLAYERESULT"
-        enemy = self.enemy
-        enemy_result = "ENEMYRESULT"
-        enemy_choice = ""
-        while True:
-            if myself.stagger == True:
-                myself_result = ""
-            if enemy.stagger == True:
-                enemy_result = ""
-
-            if myself.stagger == False:
-                print "------STATS------\n"
-                print "Bullets = " + str(myself.bullets)
-                print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-                print "-----OPTIONS-----\n"
-                print "Fist"
-                print "Gun"
-                print "Escape"
-                print ""
-
-                player_choice = raw_input("=>")
-                if player_choice == "fist":
-                    if myself.cocked == True:
-                        myself.cocked = False
-                    enemy.hp -= myself.dmg
-                    if enemy.hp > 0:    
-                        myself_result = self.player_results_fist[enemy.staggerLevel][myself.staggerLevel]
-                    else:
-                        myself_result =  "You drive your boot down, the vibrations of the snapping of bone and sinew\nrushing up your leg to meet your spine."
-
-                if player_choice == "gun" and myself.cocked == True and myself.bullets > 0:
-                    if enemy.hp > 0:
-                        enemy.hp -= 4
-                        enemy.stagger = True
-                        if enemy.staggerLevel < 3:
-                            enemy.staggerLevel += 1
-                        myself.bullets -= 1
-                        myself_result = self.player_results_fire[enemy.staggerLevel][0]
-                    else:
-                        myself_result = "You fire a shot into the crimson mulch."
-
-                if player_choice == "gun" and myself.cocked and myself.bullets == 0:
-                    myself_result = "You pull the trigger. Nothing. No shells left."
-               
-                if player_choice == "gun" and myself.cocked == False:
-                    myself.cocked = True
-                    if enemy.hp > 0:
-                        myself_result = self.player_results_gun[enemy.staggerLevel][0]
-                    else:
-                        myself_result =  "You pull out your gun."
-
-            if player_choice == "escape" and enemy.hp > 0:
-                myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
-                if myself.cocked == True:
-                    myself.cocked = False
-                if enemy.stagger > myself.stagger:
-                    print self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
-                    raw_input()
-                    break
-            if player_choice == "escape" and enemy.hp <= 0:
-                myself.bullets += enemy.bullets
-                if enemy.bullets > 0:
-                    print "You ruffle through his coat, collecting his bullets."
-                    if myself.bullets > 6:
-                        myself.bullets = 6
-                    myself.gun = myself.gun or enemy.gun
-                    raw_input()
-                    break
-                else:
-                    myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
-                    break
-                    
-            os.system('CLS')
-            print ("------ROJO-------")
-
-            if myself.stagger == True:
-                print "------STATS------\n"
-                print "Bullets = " + str(myself.bullets)
-                print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-                print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
-                print "----STAGGERED----"
-                print "You focus on drowning out the pain. Inhale. Exhale."
-                myself_result = ""
-                player_choice = raw_input("=>")
-                myself_result = ""
-                enemy_result = ""
-                os.system('CLS')
-            myself.stagger = False
-
-            if myself_result != "":
-                print myself_result
-
-            if enemy.stagger == False and enemy.hp > 0:
-                enemy_choice = self.determineIntent(self.enemy)
-                if enemy_choice == "fist":
-                    myself.hp -= enemy.dmg
-                    #if canFistStaggerEnemy == True and player.hp < player.maxHp/2:
-                            #player.stagger = True
-                            #canFistStaggerEnemy = False
-                            #player.staggerLevel += 1
-                    enemy_result = self.enemy_results_fist[enemy.staggerLevel][myself.staggerLevel]
-
-                if enemy_choice == "gun" and enemy.cocked == True and enemy.bullets > 0:
-                    myself.hp -= 4
-                    myself.stagger = True
-                    if myself.staggerLevel < 3:
-                        myself.staggerLevel += 1
-                    enemy.bullets -= 1
-                    enemy_result = self.enemy_results_fire[enemy.staggerLevel][myself.staggerLevel]
-                    
-                if enemy_choice == "gun" and enemy.cocked == False:
-                    enemy.cocked = True
-                    enemy_result = self.enemy_results_gun[enemy.staggerLevel][0]
-            
-            if enemy.stagger == True and enemy.hp > 0:
-                enemy_result = "Huffing, he climbs back to his feet."
-            if enemy.hp <= 0:
-                enemy_result = ""
-
-            if enemy_result != "":
-                print enemy_result
-            enemy.stagger = False
-
-            if myself.hp == 0:
-                game_state = 'dead'
-                libtcod.console_clear(0)
-                libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
-                os.system('CLS')
-                print ("------ROJO-------")
-                print "Re-launch the game to find the Republic again."
-                libtcod.console_flush()
-                break
-            else:
-                myself.combat_update()
-                enemy.combat_update()
-
-class Script:
-    def __init__(self, name=None, data=None, event=lambda:None, scripts=None):
-        self.name = name
-        self.data = data
-        self.scripts = scripts
-        self.event = event
-        self.choice = "DEFAULT"
-
-    def __str__(self):
-        return str(self.name)        
-
-    def getChoice(self):
-        self.choice = raw_input("=>")
-        if not self.scripts:
-            return False
-        if not self.scripts.keys():
-            return False
-        for x in self.scripts.keys():
-            if self.choice.lower() == x.lower():
-                return True
-        return False
-
-    def connect(self, toConnect):
-        if isinstance(toConnect, Script):
-            if self.scripts:
-                self.scripts[toConnect.name] = toConnect
-            else:
-                self.scripts = {toConnect.name:toConnect}
-        else:
-            if self.scripts:
-                for script in toConnect:
-                    self.scripts[script.name] = script
-            else:
-                self.scripts = toConnect
-
-    def run(self):
-        self.choice = "DEFAULT"
-        while True:
-            print
-            print(self.data)
-            print
-
-            #render the screen
-            VIEWSTATE = 'text'
-            self.event()
-            if self.scripts:
-                for scr in self.scripts.values():
-                    print(scr.name)
-            if self.choice.lower() == "/":
-                os.system('CLS')
-                print"------ROJO-------"
-                break
-            if self.getChoice() and self.scripts:
-                for y in self.scripts.keys():
-                    if self.choice.lower() == y.lower():
-                        self = self.scripts.get(y)
-
-#class Encounter:
-    #encounter has to be just data
-    #
-    #encounter has a collection of objects which can be carried between landmarks to make the text events more variable
-    #
-    #encounter will likely need a subset of it's objects to be defined as combatants, since these objects will trigger the combat state
-    
-class Object:
-    #this is a generic object: the player, a monster, an item, the stairs...
-    #it's always represented by a character on screen.
-    def __init__(self, x, y, char):
-        self.x = x
-        self.y = y
-        self.char = char
-        self.color = libtcod.black
-        #self.fadedColor = color - libtcod.dark_gray
-        self.lastX = self.x
-        self.lastY = self.y
- 
-    def move(self, dx, dy):
-        #move by the given amount, if the destination is not blocked
-        if not map[self.x + dx][self.y + dy].blocked:
-            self.x += dx
-            self.y += dy
-
-    def update(self):
-        return True
- 
-    def draw(self):
-        #fade objects out of FOV
-        if map[self.x][self.y].explored and not (libtcod.map_is_in_fov(fov_map, self.x, self.y)):
-            libtcod.console_set_default_foreground(con, color_light_ground * libtcod.dark_gray)
-            libtcod.console_put_char(con, self.lastX, self.lastY, self.char, libtcod.BKGND_NONE)
-
-        if libtcod.map_is_in_fov(fov_map, self.x, self.y):
-            libtcod.console_set_default_foreground(con, self.color)
-            libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
-            self.lastX = self.x
-            self.lastY = self.y
-
-    def clear(self):
-        #erase the character that represents this object
-        libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
-        #if libtcod.map_is_in_fov(fov_map, self.x, self.y):
-            #libtcod.console_put_char_ex(con, self.x, self.y, '.', libtcod.white, libtcod.dark_blue)
-
-    def collide(self, object):
-        if self.y == object.y and self.x == object.x:
-            return True
-        else:
-            return False
-
-
-class Combatant(Object):
-    def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun, water):
-        Object.__init__(self, x, y, char)
-        self.hp = hp
-        self.maxHp = hp
-        self.dmg = dmg
-        self.bullets = bullets
-        self.gun = gun
-        self.halfHp = halfHp
-        self.lowBullets = lowBullets
-        self.seeGun = seeGun
-        self.water = water
-        self.staggerLevel = 0
-        self.stagger = False
-        self.cocked = False
-        self.halfHpThreshold = False
-
-    def combat_update(self):
-        if self.hp < self.maxHp/2 and self.halfHpThreshold == False:
-            self.halfHpThreshold = True
-            self.halfHp()
-            self.stagger = True
-        if self.cocked == True and self.stagger == True:
-            self.cocked = False
-        if self.bullets < 3 and self.gun:
-            self.lowBullets()
-
-class Landmark(Object):
-    #a location on the map that you can enter
-    def __init__(self, x, y, char, name, objects, event):
-        Object.__init__(self, x, y, char)
-        self.name = name
-        self.objects = objects
-        self.event = event
-        
-    def update(self):
-        for obj in self.objects:
-            if Object.collide(self, obj):
-                #run event if available
-                self.event.run()
-
-    #def visited(self):
-        #if player.x == self.x and player.y == self.y:
-            #return True
-    #need code so that landmarks will fade once visited
-                                 
-def make_map():
-    map_data = open('map.txt', 'r')
-
-    x = 0
-    y = -1
-    for line in map_data:
-        if y == -1 and line.find('x') != -1:
-            global MAP_WIDTH
-            MAP_WIDTH = int(line.split('x', 2)[0])
-            global MAP_HEIGHT
-            MAP_HEIGHT = int(line.split('x', 2)[1])
-
-            global map
-            map = [[Tile(False) for a in range(MAP_HEIGHT)] for b in range(MAP_WIDTH)]
-
-        if y < MAP_HEIGHT and y >= 0:
-            for char in line:
-                if x < MAP_WIDTH:
-                    if char == '_':
-                        map[x][y] = Tile(False)
-                    if char == 'X':
-                        map[x][y] = Tile(True, True)
-                x += 1
-        x = 0
-        y += 1
-
-def read_grid_text(file, xRange, yRange):
-    text_file = open(file, 'r')
-    text_data = [["" for a in range(yRange)] for b in range(xRange)]
-    x = 0
-    y = 0
-    for line in text_file:
-        for word in line.split(';'):
-            if x < xRange and y < yRange:
-                text_data[x][y] = word.replace("^", "\n")
-                
-                #print file + " " + str(x) + " " + str(y) + " " + text_data[x][y]
-            x += 1
-        x = 0
-        y += 1
-    #print text_data
-    return text_data
-
-    #fill map with "unblocked" tiles
-    #map = [[ Tile(False)
-     #   for y in range(MAP_HEIGHT) ]
-      #      for x in range(MAP_WIDTH) ]
- 
-    #place two pillars to test the map
-    #map[30][22].blocked = True
-    #map[30][22].block_sight = True
-    #map[50][22].blocked = True
-    #map[50][22].block_sight = True
-    #map[11][15].block_sight = True
-
-    map_data.close()
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     #render a bar (HP, experience, etc). first calculate the width of the bar
     bar_width = int(float(value) / maximum * total_width)
- 
+
     #render the background first
     libtcod.console_set_default_background(panel, back_color)
     libtcod.console_rect(panel, x, y, total_width, 1, False, libtcod.BKGND_SCREEN)
- 
+
     #now render the bar on top
     libtcod.console_set_default_background(panel, bar_color)
     if bar_width > 0:
         libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
- 
+
     #finally, some centered text with the values
     libtcod.console_set_default_foreground(panel, libtcod.black)
     libtcod.console_print_ex(panel, x + total_width / 2, y, libtcod.BKGND_NONE, libtcod.CENTER,
@@ -451,7 +68,7 @@ def render_ascii():
     global fov_map, color_dark_wall, color_light_wall
     global color_dark_ground, color_light_ground
     global fov_recompute
- 
+
     if fov_recompute:
         #recompute FOV if needed (the player moved or something)
         fov_recompute = False
@@ -460,7 +77,7 @@ def render_ascii():
             libtcod.map_compute_fov(fov_map, player.x, player.y, LIGHT_RADIUS/2, FOV_LIGHT_WALLS, FOV_ALGO)
         else:
             libtcod.map_compute_fov(fov_map, player.x, player.y, LIGHT_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
- 
+
         #go through all tiles, and set their background color according to the FOV
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
@@ -485,8 +102,8 @@ def render_ascii():
     #draw all objects in the list except for the player, who appears over other objects so is drawn last
     for object in objects:
         if object != player:
-            object.draw()
-    player.draw()
+            object.draw(con, map, fov_map)
+    player.draw(con, map, fov_map)
 
     #blit the contents of "con" to the root console
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
@@ -509,7 +126,7 @@ def render_ascii():
     #blit the contents of "panel" to the root console
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
 
-     #show the player's stats
+    #show the player's stats
     #libtcod.console_set_default_foreground(con, libtcod.black)
     #water = 10
     libtcod.console_print_ex(0, 1, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
@@ -517,17 +134,17 @@ def render_ascii():
     libtcod.console_print_ex(0, 15, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
         str(player.bullets) + ' ' + 'Bullets')
     libtcod.console_print_ex(0, 29, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
-         'Water ' + str(player.water) + '/10')
+        'Water ' + str(player.water) + '/10')
 
 def message(new_msg, color = libtcod.white):
     #split the message if necessary, among multiple lines
     new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
- 
+
     for line in new_msg_lines:
         #if the buffer is full, remove the first line to make room for the new one
         if len(game_msgs) == MSG_HEIGHT:
             del game_msgs[0]
- 
+
         #add the new line as a tuple, with the text and the color
         game_msgs.append( (line, color) )
 
@@ -539,10 +156,10 @@ def handle_mouse():
 
 def handle_keys():
     global fov_recompute
- 
+
     #key = libtcod.console_check_for_keypress()  #real-time
     key = libtcod.console_wait_for_keypress(True)  #turn-based
- 
+
     if key.vk == libtcod.KEY_ENTER and key.lalt or key.vk == libtcod.KEY_ENTER and key.ralt:
         #Alt+Enter: toggle fullscreen
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
@@ -550,37 +167,37 @@ def handle_keys():
     #if game_state == 'dead':
         #if key.vk != libtcod.KEY_NONE:
             #game_state == 'playing'
- 
+
     elif key.vk == libtcod.KEY_ESCAPE:
         return True  #exit game
 
     if game_state == 'playing':
         #movement keys
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-            player.move(0, -1)
+            player.move(0, -1, map)
             fov_recompute = True
             #if player.x == town.x and player.y == town.y or player.x == town1 and player.y == town1.y:
             player.water-=1
- 
+
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-            player.move(0, 1)
+            player.move(0, 1, map)
             fov_recompute = True
             player.water-=1
- 
+
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-            player.move(-1, 0)
+            player.move(-1, 0, map)
             fov_recompute = True
             player.water-=1
- 
+
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-            player.move(1, 0)
+            player.move(1, 0, map)
             fov_recompute = True
             player.water-=1
 
         #enable for thirst mechanic
         if player.water == 0:
             player_death(player)
- 
+
 def player_death(player):
     global game_state
     game_state = 'dead'
@@ -614,11 +231,55 @@ def ending():
     else:
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
     libtcod.console_flush()
- 
+
+def make_map():
+    map_data = open('map.txt', 'r')
+
+    x = 0
+    y = -1
+    for line in map_data:
+        if y == -1 and line.find('x') != -1:
+            global MAP_WIDTH
+            MAP_WIDTH = int(line.split('x', 2)[0])
+            global MAP_HEIGHT
+            MAP_HEIGHT = int(line.split('x', 2)[1])
+
+            global map
+            map = [[Tile(False) for a in range(MAP_HEIGHT)] for b in range(MAP_WIDTH)]
+
+        if y < MAP_HEIGHT and y >= 0:
+            for char in line:
+                if x < MAP_WIDTH:
+                    if char == '_':
+                        map[x][y] = Tile(False)
+                    if char == 'X':
+                        map[x][y] = Tile(True, True)
+                x += 1
+        x = 0
+        y += 1
+
+    map_data.close()
+
+def read_grid_text(file, xRange, yRange):
+    text_file = open(file, 'r')
+    text_data = [["" for a in range(yRange)] for b in range(xRange)]
+    x = 0
+    y = 0
+    for line in text_file:
+        for word in line.split(';'):
+            if x < xRange and y < yRange:
+                text_data[x][y] = word.replace("^", "\n")
+                
+                #print file + " " + str(x) + " " + str(y) + " " + text_data[x][y]
+            x += 1
+        x = 0
+        y += 1
+    return text_data
+    
 #############################################
 # Initialization & Main Loop
 #############################################
- 
+
 libtcod.console_set_custom_font('lucida10x10_gs_tc.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'rojo', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -752,16 +413,16 @@ border10= Landmark(45, 11, 'B', "Border", [player], discoverBorder)
 
 #the list of objects with those two
 objects = [npc, player, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, town, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2, town1, town2]
- 
+
 #generate map (at this point it's not drawn to the screen)
 make_map()
- 
+
 #create the FOV map, according to the generated map
 fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 for y in range(MAP_HEIGHT):
     for x in range(MAP_WIDTH):
         libtcod.map_set_properties(fov_map, x, y, not map[x][y].block_sight, not map[x][y].blocked)
- 
+
 fov_recompute = True
 game_state = 'playing'
 
@@ -769,9 +430,10 @@ game_state = 'playing'
 game_msgs = []
 start_game = False
 #game_state = 'dead'
- 
+
 while not libtcod.console_is_window_closed():
     #render the screen
+    #combat = Combat(player,npc)
     if start_game == False:
         intro()
         if libtcod.console_wait_for_keypress(True).vk != libtcod.KEY_NONE:
@@ -780,12 +442,12 @@ while not libtcod.console_is_window_closed():
         #render_all()
         render_ascii()
         libtcod.console_flush()
- 
+
     #erase all objects at their old locations, before they move
     for object in objects:
-        object.clear()
+        object.clear(con)
         object.update()
- 
+
     #objects[3].update()
     if player.x == npc.x and player.y == npc.y:
         Combat(player, npc)
