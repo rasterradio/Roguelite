@@ -1,4 +1,5 @@
 import os
+from HelperFunctions import get_console_input
 
 class Script:
     def __init__(self, name=None, data=None, event=lambda:None, scripts=None):
@@ -12,7 +13,8 @@ class Script:
         return str(self.name)        
 
     def getChoice(self):
-        self.choice = raw_input("=>")
+        self.choice = get_console_input()
+        #self.choice = raw_input("=>")
         if not self.scripts:
             return False
         if not self.scripts.keys():

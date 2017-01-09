@@ -1,12 +1,13 @@
 from random import randint
 #this is the offending line, can't self reference roguelite
 from HelperFunctions import read_grid_text
+from HelperFunctions import get_console_input
 import os
 import libtcodpy as libtcod
 
 class Combat:
     #a class containing logic necessary to run during the combat state
-    def __init__(self, myself, enemy):
+    def __init__(self, myself, enemy, con):
         self.player_results_fist = read_grid_text('playerFistStagger.txt', 4, 4)
         self.player_results_gun = read_grid_text('playerGunStagger.txt', 4, 1)
         self.player_results_fire = read_grid_text('playerFireStagger.txt', 4, 1)
@@ -18,6 +19,7 @@ class Combat:
         self.choices = []
         self.enemy = enemy
         self.myself = myself
+        self.con = con
         self.run()
 
     def determineIntent(self, enemy):
@@ -29,6 +31,7 @@ class Combat:
     def run(self):
         os.system('CLS')
         myself = self.myself
+        con = self.con
         myself_result = "PLAYERESULT"
         enemy = self.enemy
         enemy_result = "ENEMYRESULT"
@@ -40,8 +43,9 @@ class Combat:
                 enemy_result = ""
 
             if myself.stagger == False:
-                print "------STATS------\n"
-                print "Bullets = " + str(myself.bullets)
+                libtcod.console_print(con, 0,0, "------STATS------\n")
+                output = "Bullets = " + str(myself.bullets)
+                libtcod.console_print(con,0,1, output)
                 print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
                 print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
                 print "Enemy stagger = " + str(enemy_choice) + "\n"
@@ -51,7 +55,7 @@ class Combat:
                 print "Escape"
                 print ""
 
-                player_choice = raw_input("=>")
+                player_choice = get_console_input()
                 if player_choice == "fist":
                     if myself.cocked == True:
                         myself.cocked = False
@@ -88,7 +92,7 @@ class Combat:
                     myself.cocked = False
                 myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
                 if enemy.stagger == True:
-                    raw_input()
+                    get_console_input()
 		    break
             if player_choice == "escape" and enemy.hp <= 0:
                 myself.bullets += enemy.bullets
@@ -97,7 +101,7 @@ class Combat:
                     if myself.bullets > 6:
                         myself.bullets = 6
                     myself.gun = myself.gun or enemy.gun
-                    raw_input()
+                    get_console_input()
 		    break
                 else:
                     break
@@ -112,7 +116,7 @@ class Combat:
                 print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
                 print "----STAGGERED----\n"
                 print "You focus on drowning out the pain. Inhale. Exhale."
-                player_choice = raw_input("=>")
+                player_choice = get_console_input()
                 myself_result = ""
                 enemy_result = ""
                 os.system('CLS')

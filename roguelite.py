@@ -280,7 +280,7 @@ def handleSeeGun():
 
 def handleCombat():
     npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
-    Combat(player, npc)
+    Combat(player, npc, con)
 
 #def townCombat():
     #npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
@@ -434,7 +434,7 @@ while not libtcod.console_is_window_closed():
 
     #objects[3].update()
     if player.x == npc.x and player.y == npc.y:
-        Combat(player, npc)
+        Combat(player, npc, con)
 
     if player.x == house.x and player.y == house.y:
         houseChoice = randint(0,3)
