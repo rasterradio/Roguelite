@@ -2,6 +2,7 @@ from random import randint
 #this is the offending line, can't self reference roguelite
 from HelperFunctions import read_grid_text
 from HelperFunctions import get_console_input
+from HelperFunctions import MessageLog
 import os
 import libtcodpy as libtcod
 
@@ -32,6 +33,7 @@ class Combat:
         os.system('CLS')
         myself = self.myself
         con = self.con
+        messages = MessageLog()
         myself_result = "PLAYERESULT"
         enemy = self.enemy
         enemy_result = "ENEMYRESULT"
@@ -43,17 +45,16 @@ class Combat:
                 enemy_result = ""
 
             if myself.stagger == False:
-                libtcod.console_print(con, 0,0, "------STATS------\n")
-                output = "Bullets = " + str(myself.bullets)
-                libtcod.console_print(con,0,1, output)
-                print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-                print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
-                print "Enemy stagger = " + str(enemy_choice) + "\n"
-                print "-----OPTIONS-----\n"
-                print "Fist"
-                print "Gun"
-                print "Escape"
-                print ""
+                messages.display("------STATS------\n")
+                messages.display(("Bullets = " + str(myself.bullets)))
+                messages.display( "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" )
+                messages.display( "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n")
+                messages.display( "Enemy stagger = " + str(enemy_choice) + "\n")
+                messages.display( "-----OPTIONS-----\n")
+                messages.display( "Fist")
+                messages.display( "Gun")
+                messages.display( "Escape")
+                messages.display( "")
 
                 player_choice = get_console_input()
                 if player_choice == "fist":
@@ -97,7 +98,7 @@ class Combat:
             if player_choice == "escape" and enemy.hp <= 0:
                 myself.bullets += enemy.bullets
                 if enemy.bullets > 0:
-                    print "You ruffle through his coat, collecting his bullets."
+                    messages.display( "You ruffle through his coat, collecting his bullets.")
                     if myself.bullets > 6:
                         myself.bullets = 6
                     myself.gun = myself.gun or enemy.gun
@@ -107,15 +108,15 @@ class Combat:
                     break
                     
                 os.system('CLS')
-                print ("------ROJO-------")
+                messages.display( ("------ROJO-------"))
 
             if myself.stagger == True:
-                print "------STATS------\n"
-                print "Bullets = " + str(myself.bullets)
-                print "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" 
-                print "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n"
-                print "----STAGGERED----\n"
-                print "You focus on drowning out the pain. Inhale. Exhale."
+                messages.display( "------STATS------\n")
+                messages.display( "Bullets = " + str(myself.bullets))
+                messages.display( "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" )
+                messages.display( "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n")
+                messages.display( "----STAGGERED----\n")
+                messages.display( "You focus on drowning out the pain. Inhale. Exhale.")
                 player_choice = get_console_input()
                 myself_result = ""
                 enemy_result = ""
@@ -123,7 +124,7 @@ class Combat:
             myself.stagger = False
 
             if myself_result != "":
-                print myself_result
+                messages.display( myself_result)
 
             if enemy.stagger == False and enemy.hp > 0:
                 enemy_choice = self.determineIntent(self.enemy)
@@ -153,7 +154,7 @@ class Combat:
                 enemy_result = ""
 
             if enemy_result != "":
-                print enemy_result
+                messages.display( enemy_result)
             enemy.stagger = False
 
             if myself.hp == 0:
@@ -161,8 +162,8 @@ class Combat:
                 libtcod.console_clear(0)
                 libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
                 os.system('CLS')
-                print ("------ROJO-------")
-                print "Re-launch the game to find the Republic again."
+                messages.display( ("------ROJO-------"))
+                messages.display( "Re-launch the game to find the Republic again.")
                 libtcod.console_flush()
                 break
             else:

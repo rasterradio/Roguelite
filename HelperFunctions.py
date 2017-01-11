@@ -33,3 +33,38 @@ def get_console_input():
                 caps = False
         else:
             return consoleInput
+
+class MessageLog:
+    import libtcodpy as libtcod
+    
+    def __init__(self, size=50, xPos=0, yPos=0):
+        self.messages = []
+        self.size = size
+        self.x = xPos
+        self.y = yPos
+
+    def display(self, inStr):  
+        import libtcodpy as libtcod
+        #from roguelite import con
+        SCREEN_WIDTH = 80
+        SCREEN_HEIGHT = 50
+        textCon = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
+            #prepare to render the GUI panel
+        libtcod.console_set_default_background(textCon, libtcod.black)
+        libtcod.console_set_default_foreground(textCon, libtcod.white)
+        libtcod.console_clear(textCon)
+
+        self.messages.append(inStr)
+        if len(self.messages) > SCREEN_HEIGHT:
+            self.messages = self.messages[1:]
+        i=0
+        for toDisplay in self.messages:
+            libtcod.console_print(textCon, 0, (self.y + i), toDisplay)
+            i += 1
+                
+        #blit the contents of "con" to the root console
+        libtcod.console_blit(textCon, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+        
+        libtcod.console_flush()
+
+    

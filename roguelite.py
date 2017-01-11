@@ -116,7 +116,7 @@ def render_ascii():
     y = 1
     for (line, color) in game_msgs:
         libtcod.console_set_default_foreground(panel, color)
-        libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
+        libtcod.console_print(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
         y += 1
 
     #show the player's stats
@@ -422,15 +422,16 @@ while not libtcod.console_is_window_closed():
         intro()
         if libtcod.console_wait_for_keypress(True).vk != libtcod.KEY_NONE:
             start_game = True
-    if game_state != 'dead':
-        #render_all()
-        render_ascii()
-        libtcod.console_flush()
 
     #erase all objects at their old locations, before they move
     for object in objects:
         object.clear(con)
         object.update()
+
+    if game_state != 'dead':
+        #render_all()
+        render_ascii()
+        libtcod.console_flush()
 
     #objects[3].update()
     if player.x == npc.x and player.y == npc.y:
