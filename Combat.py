@@ -1,7 +1,6 @@
 from random import randint
 #this is the offending line, can't self reference roguelite
 from HelperFunctions import read_grid_text
-from HelperFunctions import get_console_input
 from HelperFunctions import MessageLog
 import os
 import libtcodpy as libtcod
@@ -56,7 +55,7 @@ class Combat:
                 messages.display( "Escape")
                 messages.display( "")
 
-                player_choice = get_console_input()
+                player_choice = messages.get_console_input()
                 if player_choice == "fist":
                     if myself.cocked == True:
                         myself.cocked = False
@@ -93,7 +92,7 @@ class Combat:
                     myself.cocked = False
                 myself_result = self.player_results_escape[enemy.staggerLevel][myself.staggerLevel]
                 if enemy.stagger == True:
-                    get_console_input()
+                    messages.get_console_input()
 		    break
             if player_choice == "escape" and enemy.hp <= 0:
                 myself.bullets += enemy.bullets
@@ -102,7 +101,7 @@ class Combat:
                     if myself.bullets > 6:
                         myself.bullets = 6
                     myself.gun = myself.gun or enemy.gun
-                    get_console_input()
+                    messages.get_console_input()
 		    break
                 else:
                     break
@@ -117,7 +116,7 @@ class Combat:
                 messages.display( "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n")
                 messages.display( "----STAGGERED----\n")
                 messages.display( "You focus on drowning out the pain. Inhale. Exhale.")
-                player_choice = get_console_input()
+                player_choice = messages.get_console_input()
                 myself_result = ""
                 enemy_result = ""
                 os.system('CLS')

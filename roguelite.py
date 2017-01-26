@@ -43,7 +43,8 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     bar_width = int(float(value) / maximum * total_width)
 
     #render the background first
-    libtcod.console_set_default_background(panel, back_color)
+    libtcod.con
+    sole_set_default_background(panel, back_color)
     libtcod.console_rect(panel, x, y, total_width, 1, False, libtcod.BKGND_SCREEN)
 
     #now render the bar on top
