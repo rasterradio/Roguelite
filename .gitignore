@@ -1,4 +1,5 @@
 .vscode
 libtcodpy/__init__.py
-libtcodpy/__init__.pyc
+libtcodpy/*.pyc
+*.cson
 *.pyc
