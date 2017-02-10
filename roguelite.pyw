@@ -233,6 +233,23 @@ def ending():
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
     libtcod.console_flush()
 
+def make_object_map(objects):
+    omap_data = open('landmarks.txt', 'r')
+
+    x = 0
+    y = -1
+    for line in omap_data:
+        if y < MAP_HEIGHT and y >= 0:
+            for char in line:
+                if x < MAP_WIDTH:
+                    if char != '_':
+                        objects.append(Object(x, y, char))
+                x += 1
+        x = 0
+        y += 1
+
+    omap_data.close()
+
 def make_map():
     map_data = open('map.txt', 'r')
 
@@ -401,6 +418,7 @@ objects = [well, player, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, 
 
 #generate map (at this point it's not drawn to the screen)
 make_map()
+make_object_map(objects)
 
 #create the FOV map, according to the generated map
 fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
