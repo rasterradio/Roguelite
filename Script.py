@@ -8,15 +8,13 @@ class Script:
         self.scripts = scripts
         self.event = event
         self.choice = "DEFAULT"
-        self.messages = MessageLog()
 
     def __str__(self):
         return str(self.name)        
 
-    def getChoice(self):
-        messages = self.messages
+    def getChoice(self, messages):
         self.choice = messages.get_console_input()
-        #self.choice = raw_input("=>")
+
         if not self.scripts:
             return False
         if not self.scripts.keys():
@@ -39,24 +37,28 @@ class Script:
             else:
                 self.scripts = toConnect
 
-    def run(self):
+    def run(self, messages):
         self.choice = "DEFAULT"
         while True:
-            self.messages.display("")
-            self.messages.display(self.data)
-            self.messages.display("")
+            messages.display("")
+            messages.display(self.data)
+            messages.display("")
 
-            #render the screen
-            VIEWSTATE = 'text'
+            #render the sceen
             self.event()
             if self.scripts:
                 for scr in self.scripts.values():
-                    self.messages.display(scr.name)
+                    messages.display(scr.name)
+
+            self.getChoice(messages)
+
             if self.choice.lower() == "/":
                 os.system('CLS')
-                self.messages.display("------ROJO-------")
+                messages.display("------ROJO-------")
+                messages.reset()
                 break
-            if self.getChoice() and self.scripts:
+
+            if self.scripts:
                 for y in self.scripts.keys():
                     if self.choice.lower() == y.lower():
                         self = self.scripts.get(y)

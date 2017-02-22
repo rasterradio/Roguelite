@@ -14,6 +14,9 @@ def read_grid_text(file, xRange, yRange):
         y += 1
     return text_data
 
+class Message:
+    lines = []
+
 class MessageLog:
     SCREEN_WIDTH = 80
     SCREEN_HEIGHT = 50
@@ -27,6 +30,10 @@ class MessageLog:
         self.cursor = yPos
 
         self.textCon = libtcod.console_new(MessageLog.SCREEN_WIDTH, MessageLog.SCREEN_HEIGHT)
+
+    def reset(self):
+        self.cursor = self.y
+        self.messages = []
 
     def get_console_input(self):
         import libtcodpy as libtcod
@@ -59,7 +66,7 @@ class MessageLog:
     def display(self, inStr):  
         import libtcodpy as libtcod
         textCon = self.textCon
-        #from roguelite import con
+
         #prepare to render the GUI panel
         libtcod.console_set_default_background(textCon, libtcod.black)
         libtcod.console_set_default_foreground(textCon, libtcod.white)

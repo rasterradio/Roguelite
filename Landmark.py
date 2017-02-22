@@ -1,4 +1,5 @@
 from ObjectMod import Object
+from HelperFunctions import MessageLog
 
 class Landmark(Object):
     #a location on the map that you can enter
@@ -7,12 +8,14 @@ class Landmark(Object):
         self.name = name
         self.objects = objects
         self.event = event
-        
+        self.messages = MessageLog()
+
     def update(self):
         for obj in self.objects:
             if Object.collide(self, obj):
                 #run event if available
-                self.event.run()
+                self.event.messages = MessageLog()
+                self.event.run(self.messages)
 
     #def visited(self):
         #if player.x == self.x and player.y == self.y:
