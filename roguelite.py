@@ -272,6 +272,8 @@ def make_map():
                         map[x][y] = Tile(False)
                     if char == 'X':
                         map[x][y] = Tile(True, True)
+                    if char == 'V':
+                        map[x][y] = Tile(False, True)
                 x += 1
         x = 0
         y += 1
