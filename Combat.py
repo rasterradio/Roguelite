@@ -156,7 +156,7 @@ class Combat:
                 messages.display( enemy_result)
             enemy.stagger = False
 
-            if myself.hp == 0:
+            if myself.hp <= 0:
                 game_state = 'dead'
                 libtcod.console_clear(0)
                 libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, libtcod.BKGND_NONE, libtcod.CENTER, "The world fades.")
