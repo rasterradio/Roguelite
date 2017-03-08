@@ -18,10 +18,11 @@ class Message:
     def __init__(self, arr):
         self.lines = []
         self.y = 0
+        self.margin = 10
         for i in range(len(arr)):
             currentLine = arr[i]
 
-            diff = len(currentLine) - MessageLog.SCREEN_WIDTH
+            diff = len(currentLine) - (MessageLog.SCREEN_WIDTH + self.margin)
             newLines = []
             while (True):
                 if (diff <= 0):
@@ -133,7 +134,7 @@ class MessageLog:
         i=0  
         for toDisplay in self.messages:
             for strin in toDisplay.lines:
-                libtcod.console_print(textCon, 0, (self.y + i), strin)
+                libtcod.console_print(textCon, toDisplay.margin/2, (self.y + i), strin)
                 i += 1
         self.cursor = i+1
         #blit the contents of "con" to the root console
