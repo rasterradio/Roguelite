@@ -196,8 +196,8 @@ def handle_keys():
             player.water-=1
 
         #enable for thirst mechanic
-        if player.water == 0:
-            player_death(player)
+        #if player.water == 0:
+            #player_death(player)
 
 def player_death(player):
     global game_state
@@ -348,31 +348,31 @@ townSafe = Script("", "You step out of the alley and back into the street.\nPeop
 #discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
 discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
 
-#buyPony = Script("You load the horse with bags and lead her back into the market.", boughtPony)
-#townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony, discoverTown.name:discoverTown})
-#discoverTown = Script("Leave", "You step into a bazaar. Women balance pots on their heads and children push through the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater, townSleep.name:townSleep})
+buyPony = Script("Pony", "You load the horse with bags and lead her back into the market.", boughtPony)
+townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony})#, discoverTown.name:discoverTown})
+discoverTown = Script("Leave", "You step into a bazaar. Women balance pots on their heads and children push through the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater, townSleep.name:townSleep})
 
 discoverWell = Script("Well", "A well. The earth has cracked and dried against the clay ridge.", lambda:None, {houseWater.name:houseWater})
 
-#town = Landmark(41, 12, 'T', "Town", [player], discoverTown)
+town = Landmark(41, 12, 'T', "Town", [player], discoverTown)
 well = Landmark(39, 18, 'W', "Well", [player], discoverWell)
 
 house = Landmark(39, 21, 'H', "House", [player], discoverHouse1)
 house1 = Landmark(32, 18, 'H', "House", [player], discoverHouse4)
 house2 = Landmark(51, 24, 'H', "House", [player], discoverHouse2)
 
-tree = Object(17, 15, 't')
-tree1 = Object(18, 15, 't')
-tree2 = Object(19, 15, 't')
-tree3 = Object(20, 15, 't')
-tree4 = Object(21, 15, 't')
-tree5 = Object(22, 15, 't')
-tree6 = Object(23, 15, 't')
-tree7 = Object(17, 14, 't')
+tree= Object(17, 15, 't')
+tree1= Object(18, 15, 't')
+tree2= Object(19, 15, 't')
+tree3= Object(20, 15, 't')
+tree4= Object(21, 15, 't')
+tree5= Object(22, 15, 't')
+tree6= Object(23, 15, 't')
+tree7= Object(17, 14, 't')
 tree8= Object(18, 14, 't')
-tree9 = Object(19, 14, 't')
-tree10 = Object(20, 14, 't')
-tree11 = Object(21, 14, 't')
+tree9= Object(19, 14, 't')
+tree10= Object(20, 14, 't')
+tree11= Object(21, 14, 't')
 tree12= Object(22, 14, 't')
 tree13= Object(23, 14, 't')
 tree14= Object(18, 15, 't')
@@ -405,18 +405,14 @@ border8= Landmark(43, 11, 'B', "Border", [player], discoverBorder)
 border9= Landmark(44, 11, 'B', "Border", [player], discoverBorder)
 border10= Landmark(45, 11, 'B', "Border", [player], discoverBorder)
 
-#townPony.connect(discoverTown)
+townPony.connect(discoverTown)
+buyPony.connect(discoverTown)
 
 #townAttack.connect(townSafe)
 #houseAttack.connect(houseSafeSearch)
 
-#holeInMound = Script("a hole", "You reach inside the hole, you can't reach the end of the hole.", None, handleCombat)
-#discoverMound = Script("Atop the Mound", "on the plain, a two foot high vantage point can seem significant, until you view the hawk overhead.", {holeInMound.name:holeInMound})
-#holeInMound.scripts = {discoverMound.name:discoverMound}
-#mound = Landmark(player.x + 1, player.y + 2, '^', "Mound", [player], discoverMound)
-
 #the list of objects with those two
-objects = [well, player, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2]#, town]
+objects = [well, player, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2, town]
 
 #generate map (at this point it's not drawn to the screen)
 make_map()
