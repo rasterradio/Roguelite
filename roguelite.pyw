@@ -323,7 +323,7 @@ def handleEnding():
 def boughtPony():
     pony = True
 
-player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 12)
+player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 12, 10)
 
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n[Press '/' to leave]", lightSleep)
@@ -391,7 +391,7 @@ tree26= Object(18, 15, 't')
 tree27= Object(18, 15, 't')
 tree28= Object(18, 15, 't')
 
-npc = Combatant(-1, -1, '&', 20, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 0)
+npc = Combatant(-1, -1, '&', 20, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 0, 0)
 
 border = Landmark(35, 11, 'B', "Border", [player], discoverBorder)
 border1 = Landmark(36, 11, 'B', "Border", [player], discoverBorder)
