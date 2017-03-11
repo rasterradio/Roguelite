@@ -1,7 +1,7 @@
 from ObjectMod import Object
 
 class Combatant(Object):
-    def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun, water):
+    def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun, water, maxWater):
         Object.__init__(self, x, y, char)
         self.hp = hp
         self.maxHp = hp
@@ -12,6 +12,7 @@ class Combatant(Object):
         self.lowBullets = lowBullets
         self.seeGun = seeGun
         self.water = water
+        self.maxWater = maxWater
         self.staggerLevel = 0
         self.stagger = False
         self.cocked = False
