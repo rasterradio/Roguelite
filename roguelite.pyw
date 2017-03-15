@@ -135,7 +135,7 @@ def render_ascii():
     libtcod.console_print_ex(0, 15, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
         str(player.bullets) + ' ' + 'Bullets')
     libtcod.console_print_ex(0, 29, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
-        'Water ' + str(player.water) + '/10')
+        'Water ' + str(player.water) + '/' + str(player.maxWater))
 
 def message(new_msg, color = libtcod.white):
     #split the message if necessary, among multiple lines
@@ -303,7 +303,7 @@ def handleCombat():
     Combat(player, npc, con)
 
 def refillWater():
-    player.water = 10
+    player.water = player.maxWater
 
 def lightSleep():
     if player.hp >= 10:
@@ -322,8 +322,9 @@ def handleEnding():
 
 def boughtPony():
     pony = True
+    player.maxWater = 20
 
-player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 12, 10)
+player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 10)
 
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n[Press '/' to leave]", lightSleep)
