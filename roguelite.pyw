@@ -198,6 +198,14 @@ def handle_keys():
         #enable for thirst mechanic
         #if player.water == 0:
             #player_death(player)
+        if player.maxWater == 20:
+            Script("blah", "TEST", lambda: None)
+            if player.water == 10:
+                shootPony = Script("shoot", "You close your eyes. She gets the easy way out.", ponyDead())
+                resistPony = Script("resist", "Can't spare the bullet. You spur her forward.")
+                ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.", lambda: None, {shootPony.name:shootPony, resistPony.name:resistPony})
+            if player.water == 5:
+                leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on. You leave her where she falls.", ponyDead())
 
 def player_death(player):
     global game_state
@@ -288,6 +296,7 @@ libtcod.console_set_custom_font('lucida10x10_gs_tc.png', libtcod.FONT_TYPE_GREYS
 libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'rojo', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
+pony = False
 
 def handleLow():
     return None
@@ -323,6 +332,9 @@ def handleEnding():
 def boughtPony():
     pony = True
     player.maxWater = 20
+
+def ponyDead():
+    pony = False
 
 player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 10)
 
