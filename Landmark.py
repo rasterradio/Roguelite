@@ -17,6 +17,13 @@ class Landmark(Object):
                 self.event.messages = MessageLog()
                 self.event.run(self.messages)
 
+    def follow(self, target, map):
+        if (self.x != target.x or self.y != target.y):
+            dx = target.x - self.x
+            dy = target.y - self.y
+            if (dx) : dx = dx / abs(dx)
+            if (dy) : dy = dy / abs(dy)
+            self.move(dx, dy, map)
     #def visited(self):
         #if player.x == self.x and player.y == self.y:
             #return True

@@ -36,7 +36,7 @@ VIEWSTATE = "ascii"
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
-color_light_ground = libtcod.Color(200, 180, 50) 
+color_light_ground = libtcod.Color(200, 180, 50)
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     #render a bar (HP, experience, etc). first calculate the width of the bar
@@ -99,7 +99,7 @@ def render_ascii():
                         #libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET )
                         libtcod.console_put_char_ex(con, x, y, '.', libtcod.grey, libtcod.white)
                     map[x][y].explored = True
-    
+
     #draw all objects in the list except for the player, who appears over other objects so is drawn last
     for object in objects:
         if object != player:
@@ -153,7 +153,7 @@ def handle_mouse():
     mouse = libtcod.mouse_get_status()
     if mouse.lbutton:
         if mouse.cx == 0 and mouse.cy == 0:
-            print "MOUSE" 
+            print "MOUSE"
 
 def handle_keys():
     global fov_recompute
@@ -457,7 +457,7 @@ while not libtcod.console_is_window_closed():
     for object in objects:
         object.clear(con)
         object.update()
-
+    well.follow(player, map)
     if game_state != 'dead':
         #render_all()
         render_ascii()
@@ -470,7 +470,7 @@ while not libtcod.console_is_window_closed():
     if player.x == house.x and player.y == house.y:
         houseChoice = randint(0,3)
         player.water += 1
-        
+
     #handle keys and exit game if needed
     if VIEWSTATE == 'ascii':
         exit = handle_keys()
