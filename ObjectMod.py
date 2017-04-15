@@ -11,7 +11,7 @@ class Object:
         #self.fadedColor = color - libtcod.dark_gray
         self.lastX = self.x
         self.lastY = self.y
- 
+
     def move(self, dx, dy, map):
         #move by the given amount, if the destination is not blocked
         if not map[self.x + dx][self.y + dy].blocked:
@@ -20,7 +20,15 @@ class Object:
 
     def update(self):
         return True
- 
+
+    def follow(self, target, map):
+        if (self.x != target.x or self.y != target.y):
+            dx = target.x - self.x
+            dy = target.y - self.y
+            if (dx) : dx = dx / abs(dx)
+            if (dy) : dy = dy / abs(dy)
+            self.move(dx, dy, map)
+
     def draw(self, con, map, fov_map):
         #fade objects out of FOV
         if map[self.x][self.y].explored and not (libtcod.map_is_in_fov(fov_map, self.x, self.y)):

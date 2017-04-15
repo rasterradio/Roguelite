@@ -38,6 +38,9 @@ color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
 color_light_ground = libtcod.Color(200, 180, 50)
 
+def getNearest(obj, objects):
+    return sorted(objects, key= lambda item: abs(obj.x - item.x + obj.y - item.y))[1]
+
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     #render a bar (HP, experience, etc). first calculate the width of the bar
     bar_width = int(float(value) / maximum * total_width)
@@ -307,6 +310,23 @@ def handleLowAmmo():
 def handleSeeGun():
     print("")
 
+def handleLowWater():
+    print("Im low on water")
+def enemySpawn():
+    nearest = getNearest(player, objects)
+    distanceToNearest = nearest.x - player.x - player.y + nearest.y
+    print(nearest.char)
+    print(" ")
+    
+    if distanceToNearest > 4 and randint(0,10)==10 :
+        print("distance greater and rand hit")
+        distanceFromPlayer = randint(0,1)
+        if distanceFromPlayer == 0 : distanceFromPlayer -= 1
+        distanceFromPlayer = distanceFromPlayer*4
+        enemyX = player.x + distanceFromPlayer
+        enemyY = player.y + distanceFromPlayer
+        enemy = Combatant(enemyX, enemyY, 'u', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
+        return enemy
 def handleCombat():
     npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
     Combat(player, npc, con)
@@ -336,7 +356,7 @@ def boughtPony():
 def ponyDead():
     pony = False
 
-player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 10)
+player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 10, handleLowWater)
 
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n[Press '/' to leave]", lightSleep)
@@ -425,7 +445,7 @@ buyPony.connect(discoverTown)
 #houseAttack.connect(houseSafeSearch)
 
 #the list of objects with those two
-objects = [well, player, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2, town]
+objects = [player, well, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2, town]
 
 #generate map (at this point it's not drawn to the screen)
 make_map()
@@ -457,7 +477,11 @@ while not libtcod.console_is_window_closed():
     for object in objects:
         object.clear(con)
         object.update()
-    well.follow(player, map)
+    #well.follow(player, map)
+    loui = enemySpawn()
+    if loui != None:
+        objects.append(loui)
+        loui.follow(player, map)
     if game_state != 'dead':
         #render_all()
         render_ascii()
