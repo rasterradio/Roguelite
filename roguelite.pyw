@@ -2,6 +2,8 @@ import libtcodpy as libtcod
 import textwrap
 from random import randint
 import os
+from math import sqrt
+import time
 #import Tile
 #import Combat
 #import Script
@@ -32,14 +34,15 @@ FOV_LIGHT_WALLS = False  #light walls or not
 LIGHT_RADIUS = 50
 
 VIEWSTATE = "ascii"
-
+steps = 0
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
 color_light_ground = libtcod.Color(200, 180, 50)
 
 def getNearest(obj, objects):
-    return sorted(objects, key= lambda item: abs(obj.x - item.x + obj.y - item.y))[1]
+    list = sorted(objects, key= lambda item: abs(sqrt((obj.x - item.x)**2 + (obj.y - item.y)**2)))
+    return list[1]
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     #render a bar (HP, experience, etc). first calculate the width of the bar
@@ -233,7 +236,7 @@ def intro():
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
     libtcod.console_flush()
 
-def ending():
+def ending():                                                                
     game_state = 'dead'
     libtcod.console_clear(0)
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "END")
@@ -257,7 +260,7 @@ def make_object_map(objects):
                         objects.append(Object(x, y, char))
                 x += 1
         x = 0
-        y += 1
+        y += 1                                                                                                                                          
 
     omap_data.close()
 
@@ -312,10 +315,14 @@ def handleSeeGun():
 
 def handleLowWater():
     print("Im low on water")
+
 def enemySpawn():
     nearest = getNearest(player, objects)
-    distanceToNearest = nearest.x - player.x - player.y + nearest.y
+    distanceToNearest = sqrt((player.x - nearest.x)**2 + (player.y - nearest.y)**2)
     print(nearest.char)
+    print(" ")
+    print(nearest.x)
+    print(nearest.y)
     print(" ")
     
     if distanceToNearest > 4 and randint(0,10)==10 :
@@ -326,7 +333,13 @@ def enemySpawn():
         enemyX = player.x + distanceFromPlayer
         enemyY = player.y + distanceFromPlayer
         enemy = Combatant(enemyX, enemyY, 'u', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
+        def onUpdate() : 
+            if (steps % 2 == 0): enemy.avoid(player, map)
+            if(enemy.x == player.x and enemy.y == player.y):
+                objects.remove(enemy)
+        enemy.onUpdate = onUpdate
         return enemy
+
 def handleCombat():
     npc = Combatant(-1, -1, '&', 10, 1, 1, False, handleLow, handleLowAmmo, handleSeeGun, 0) #for some reason gunshots by enemy fire every bullet, killing player instantly. need to fix
     Combat(player, npc, con)
@@ -502,3 +515,4 @@ while not libtcod.console_is_window_closed():
         choice = handle_mouse()
     if exit:
         break
+    steps += 1
