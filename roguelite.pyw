@@ -322,6 +322,7 @@ def handleLowWater():
                 ponyThirst.connect(shootPony)
                 ponyThirst.connect(resistPony)
                 ponyThirst.messages = MessageLog()
+                ponythirst.breakable = False
                 ponyThirst.run(ponyThirst.messages)
 
             if player.water == 10:

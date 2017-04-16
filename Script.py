@@ -2,15 +2,16 @@ import os
 from HelperFunctions import MessageLog
 
 class Script:
-    def __init__(self, name=None, data=None, event=lambda:None, scripts=None):
+    def __init__(self, name=None, data=None, event=lambda:None, scripts=None, breakable=True):
         self.name = name
         self.data = data
         self.scripts = scripts
         self.event = event
         self.choice = "DEFAULT"
+        self.breakable = breakable
 
     def __str__(self):
-        return str(self.name)        
+        return str(self.name)
 
     def getChoice(self, messages):
         self.choice = messages.get_console_input()
@@ -49,13 +50,13 @@ class Script:
             if self.scripts:
                 for scr in self.scripts.values():
                     messages.display(scr.name)
-                    messages.display("/")
+                    messages.display("Back")
 
             messages.display("\n")
 
             self.getChoice(messages)
 
-            if self.choice.lower() == "/":
+            if self.choice.lower() == "Back" and self.breakable:
                 os.system('CLS')
                 messages.display("------ROJO-------")
                 messages.reset()

@@ -7,7 +7,7 @@ def read_grid_text(file, xRange, yRange):
         for word in line.split(';'):
             if x < xRange and y < yRange:
                 text_data[x][y] = word.replace("^", "\n")
-                
+
                 #print file + " " + str(x) + " " + str(y) + " " + text_data[x][y]
             x += 1
         x = 0
@@ -28,15 +28,15 @@ class Message:
                 if (diff <= 0):
                     newLines.append(currentLine)
                     break
-                    
+
     #What Happens here??? Should we add a null term char? or a newline char?
                 newLines.append(currentLine[:MessageLog.SCREEN_WIDTH])
                 currentLine = currentLine[-diff:]
                 diff = len(currentLine) - MessageLog.SCREEN_WIDTH
             self.lines += newLines
-    
+
     def getHeight(self):
-        return len(self.lines)        
+        return len(self.lines)
 
     def rmLine(self):
         self.lines = self.lines[:-1]
@@ -45,7 +45,7 @@ class MessageLog:
     SCREEN_WIDTH = 80
     SCREEN_HEIGHT = 50
 
-    def __init__(self, size=50, xPos=0, yPos=0):    
+    def __init__(self, size=50, xPos=0, yPos=0):
         import libtcodpy as libtcod
         self.messages = []
         self.size = size
@@ -69,7 +69,7 @@ class MessageLog:
 
         libtcod.mouse_show_cursor(True)
         while (True):
-            libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS|libtcod.EVENT_MOUSE,key,mouse)
+            libtcod.sys_check_for_event(libtcod.EVENT_MOUSE,None,mouse)
             mouseStat = mouse
 
             if(mouseStat.lbutton_pressed):
@@ -77,7 +77,7 @@ class MessageLog:
                     for i in range(element.getHeight()):
                         if  (element.y + i == mouseStat.cy):
                             return element.lines[i]
-        
+
             instr = key
             if instr.vk == libtcod.KEY_NONE:
                 continue
@@ -96,10 +96,10 @@ class MessageLog:
                             consoleInput += chr(instr.c).capitalize()
                         else:
                             consoleInput += chr(instr.c)
-                
+
                 libtcod.console_print(textCon, 0, (self.y + self.cursor), consoleInput)
                 libtcod.console_blit(textCon, 0, 0, MessageLog.SCREEN_WIDTH, MessageLog.SCREEN_HEIGHT, 0, 0, 0)
-        
+
                 libtcod.console_flush()
             else:
                 libtcod.mouse_show_cursor(False)
@@ -107,7 +107,7 @@ class MessageLog:
 
             caps = False
 
-    def display(self, inStr):  
+    def display(self, inStr):
         import libtcodpy as libtcod
         textCon = self.textCon
 
@@ -115,9 +115,9 @@ class MessageLog:
         libtcod.console_set_default_background(textCon, libtcod.black)
         libtcod.console_set_default_foreground(textCon, libtcod.white)
         libtcod.console_clear(textCon)
-        
+
         newMessage = Message(inStr.splitlines())
-        
+
         newY = 0
         for elem in self.messages:
             newY += elem.getHeight()
@@ -131,7 +131,7 @@ class MessageLog:
                     each.y -= self.messages[0].getHeight()
                 self.cursor -= self.messages[0].getHeight()
                 self.messages = self.messages[1:]
-        i=0  
+        i=0
         for toDisplay in self.messages:
             for strin in toDisplay.lines:
                 libtcod.console_print(textCon, toDisplay.margin/2, (self.y + i), strin)
@@ -139,7 +139,5 @@ class MessageLog:
         self.cursor = i+1
         #blit the contents of "con" to the root console
         libtcod.console_blit(textCon, 0, 0, MessageLog.SCREEN_WIDTH, MessageLog.SCREEN_HEIGHT, 0, 0, 0)
-        
-        libtcod.console_flush()
 
-    
+        libtcod.console_flush()
