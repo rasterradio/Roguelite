@@ -204,14 +204,13 @@ def handle_keys():
         #enable for thirst mechanic
         #if player.water == 0:
             #player_death(player)
-        if player.maxWater == 20:
-            Script("blah", "TEST", lambda: None)
-            if player.water == 10:
-                shootPony = Script("shoot", "You close your eyes. She gets the easy way out.", ponyDead())
-                resistPony = Script("resist", "Can't spare the bullet. You spur her forward.")
-                ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.", lambda: None, {shootPony.name:shootPony, resistPony.name:resistPony})
-            if player.water == 5:
-                leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on. You leave her where she falls.", ponyDead())
+        #if player.maxWater == 40:
+            #if player.water == 20:
+                #shootPony = Script("shoot", "You close your eyes. She gets the easy way out.", ponyDead())
+                #resistPony = Script("resist", "Can't spare the bullet. You spur her forward.")
+                #ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.", lambda: None, {shootPony.name:shootPony, resistPony.name:resistPony})
+            #if player.water == 10:
+                #leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on. You leave her where she falls.", ponyDead())
 
 def player_death(player):
     global game_state
@@ -314,7 +313,15 @@ def handleSeeGun():
     print("")
 
 def handleLowWater():
-    print("Im low on water")
+    script.messages = MessageLog()
+    if player.maxWater == 40:
+            if player.water == 20:
+                shootPony = Script("shoot", "You close your eyes. She gets the easy way out.", ponyDead())
+                resistPony = Script("resist", "Can't spare the bullet. You spur her forward.")
+                ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.", lambda: None, {shootPony.name:shootPony, resistPony.name:resistPony})
+                ponyThirst.run(ponyThirst.messages)
+            if player.water == 10:
+                leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on. You leave her where she falls.", ponyDead())
 
 def enemySpawn():
     nearest = getNearest(player, objects)
@@ -332,7 +339,7 @@ def enemySpawn():
         distanceFromPlayer = distanceFromPlayer*4
         enemyX = player.x + distanceFromPlayer
         enemyY = player.y + distanceFromPlayer
-        enemy = Combatant(enemyX, enemyY, 'u', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
+        enemy = Combatant(enemyX, enemyY, '&', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
         def onUpdate() : 
             if (steps % 2 == 0): enemy.avoid(player, map)
             if(enemy.x == player.x and enemy.y == player.y):
@@ -364,12 +371,12 @@ def handleEnding():
 
 def boughtPony():
     pony = True
-    player.maxWater = 20
+    player.maxWater = 40
 
 def ponyDead():
     pony = False
 
-player = Combatant(40, 25, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 10, handleLowWater)
+player = Combatant(10, 20, '@', 10, 2, 2, True, handleLow, handleLowAmmo, handleSeeGun, 10, 20, handleLowWater)
 
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n[Press '/' to leave]", lightSleep)
@@ -386,70 +393,70 @@ discoverHouse2 = Script("Leave", "An old house sets on the hill, the paint yello
 discoverHouse3 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda:None, {houseSafeSearch.name:houseSafeSearch})
 discoverHouse4 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda: None, {houseEnemySearch.name:houseEnemySearch})
 
-townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
-townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.\n[Press '/' to leave]", deepSleep)
-townSafe = Script("", "You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.\n[Press '/' to leave]", lambda: None, {houseWater.name:townWater, houseSleep.name:townSleep})
+townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last twelve days in the wild.", refillWater)
+townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.", deepSleep)
+townSafe = Script("", "You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.", lambda: None, {houseWater.name:townWater, houseSleep.name:townSleep})
 
 #discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while\nnuns shovel hay. The wooden cross has been covered by a Falangist banner.", lambda: None, {townEnemy.name:townEnemy})
 #discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
 discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
 
-buyPony = Script("Pony", "You load the horse with bags and lead her back into the market.", boughtPony)
+buyPony = Script("Purchase", "You load the horse with bags and lead her back into the market.", boughtPony)
 townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony})#, discoverTown.name:discoverTown})
-discoverTown = Script("Leave", "You step into a bazaar. Women balance pots on their heads and children push through the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater, townSleep.name:townSleep})
+discoverTown = Script("Leave", "You step into a bazaar. Women balance pots on their heads and children push\nthrough the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater, townSleep.name:townSleep})
 
 discoverWell = Script("Well", "A well. The earth has cracked and dried against the clay ridge.", lambda:None, {houseWater.name:houseWater})
 
-town = Landmark(41, 12, 'T', "Town", [player], discoverTown)
-well = Landmark(39, 18, 'W', "Well", [player], discoverWell)
+town = Landmark(34, 23, 'T', "Town", [player], discoverTown)
+well = Landmark(18, 21, 'W', "Well", [player], discoverWell)
 
-house = Landmark(39, 21, 'H', "House", [player], discoverHouse1)
-house1 = Landmark(32, 18, 'H', "House", [player], discoverHouse4)
-house2 = Landmark(51, 24, 'H', "House", [player], discoverHouse2)
+#house = Landmark(39, 21, 'H', "House", [player], discoverHouse1)
+#house1 = Landmark(32, 18, 'H', "House", [player], discoverHouse4)
+#house2 = Landmark(51, 24, 'H', "House", [player], discoverHouse2)
 
-tree= Object(17, 15, 't')
-tree1= Object(18, 15, 't')
-tree2= Object(19, 15, 't')
-tree3= Object(20, 15, 't')
-tree4= Object(21, 15, 't')
-tree5= Object(22, 15, 't')
-tree6= Object(23, 15, 't')
-tree7= Object(17, 14, 't')
-tree8= Object(18, 14, 't')
-tree9= Object(19, 14, 't')
-tree10= Object(20, 14, 't')
-tree11= Object(21, 14, 't')
-tree12= Object(22, 14, 't')
-tree13= Object(23, 14, 't')
-tree14= Object(18, 15, 't')
-tree15= Object(18, 15, 't')
-tree16= Object(18, 15, 't')
-tree17= Object(18, 15, 't')
-tree18= Object(18, 15, 't')
-tree19= Object(18, 15, 't')
-tree20= Object(18, 15, 't')
-tree21= Object(18, 15, 't')
-tree22= Object(18, 15, 't')
-tree23= Object(18, 15, 't')
-tree24= Object(18, 15, 't')
-tree25= Object(18, 15, 't')
-tree26= Object(18, 15, 't')
-tree27= Object(18, 15, 't')
-tree28= Object(18, 15, 't')
+#tree= Object(17, 15, 't')
+#tree1= Object(18, 15, 't')
+#tree2= Object(19, 15, 't')
+#tree3= Object(20, 15, 't')
+#tree4= Object(21, 15, 't')
+#tree5= Object(22, 15, 't')
+#tree6= Object(23, 15, 't')
+#tree7= Object(17, 14, 't')
+#tree8= Object(18, 14, 't')
+#tree9= Object(19, 14, 't')
+#tree10= Object(20, 14, 't')
+#tree11= Object(21, 14, 't')
+#tree12= Object(22, 14, 't')
+#tree13= Object(23, 14, 't')
+#tree14= Object(18, 15, 't')
+#tree15= Object(18, 15, 't')
+#tree16= Object(18, 15, 't')
+#tree17= Object(18, 15, 't')
+#tree18= Object(18, 15, 't')
+#tree19= Object(18, 15, 't')
+#tree20= Object(18, 15, 't')
+#tree21= Object(18, 15, 't')
+#tree22= Object(18, 15, 't')
+#tree23= Object(18, 15, 't')
+#tree24= Object(18, 15, 't')
+#tree25= Object(18, 15, 't')
+#tree26= Object(18, 15, 't')
+#tree27= Object(18, 15, 't')
+#tree28= Object(18, 15, 't')
 
 npc = Combatant(-1, -1, '&', 20, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 0, 0)
 
-border = Landmark(35, 11, 'B', "Border", [player], discoverBorder)
-border1 = Landmark(36, 11, 'B', "Border", [player], discoverBorder)
-border2 = Landmark(37, 11, 'B', "Border", [player], discoverBorder)
-border3= Landmark(38, 11, 'B', "Border", [player], discoverBorder)
-border4= Landmark(39, 11, 'B', "Border", [player], discoverBorder)
-border5= Landmark(40, 11, 'B', "Border", [player], discoverBorder)
-border6= Landmark(41, 11, 'B', "Border", [player], discoverBorder)
-border7= Landmark(42, 11, 'B', "Border", [player], discoverBorder)
-border8= Landmark(43, 11, 'B', "Border", [player], discoverBorder)
-border9= Landmark(44, 11, 'B', "Border", [player], discoverBorder)
-border10= Landmark(45, 11, 'B', "Border", [player], discoverBorder)
+#border = Landmark(35, 11, 'B', "Border", [player], discoverBorder)
+#border1 = Landmark(36, 11, 'B', "Border", [player], discoverBorder)
+#border2 = Landmark(37, 11, 'B', "Border", [player], discoverBorder)
+#border3= Landmark(38, 11, 'B', "Border", [player], discoverBorder)
+#border4= Landmark(39, 11, 'B', "Border", [player], discoverBorder)
+#border5= Landmark(40, 11, 'B', "Border", [player], discoverBorder)
+#border6= Landmark(41, 11, 'B', "Border", [player], discoverBorder)
+#border7= Landmark(42, 11, 'B', "Border", [player], discoverBorder)
+#border8= Landmark(43, 11, 'B', "Border", [player], discoverBorder)
+#border9= Landmark(44, 11, 'B', "Border", [player], discoverBorder)
+#border10= Landmark(45, 11, 'B', "Border", [player], discoverBorder)
 
 townPony.connect(discoverTown)
 buyPony.connect(discoverTown)
@@ -458,7 +465,7 @@ buyPony.connect(discoverTown)
 #houseAttack.connect(houseSafeSearch)
 
 #the list of objects with those two
-objects = [player, well, tree, tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9, tree10, tree11, tree12, tree13, house, border, border1, border2, border3, border4, border5, border6, border7, border8, border9, border10, house1, house2, town]
+objects = [player, well, town]
 
 #generate map (at this point it's not drawn to the screen)
 make_map()
@@ -504,9 +511,9 @@ while not libtcod.console_is_window_closed():
     if player.x == npc.x and player.y == npc.y:
         Combat(player, npc, con)
 
-    if player.x == house.x and player.y == house.y:
-        houseChoice = randint(0,3)
-        player.water += 1
+    #if player.x == house.x and player.y == house.y:
+        #houseChoice = randint(0,3)
+        #player.water += 1
 
     #handle keys and exit game if needed
     if VIEWSTATE == 'ascii':

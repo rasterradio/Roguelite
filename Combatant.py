@@ -1,4 +1,5 @@
 from ObjectMod import Object
+from HelperFunctions import MessageLog
 
 class Combatant(Object):
     def __init__(self, x, y, char, hp, dmg, bullets, gun, halfHp, lowBullets, seeGun, water, maxWater, lowWater = lambda: None):
@@ -32,6 +33,6 @@ class Combatant(Object):
 
     def update(self):
         Object.update(self)
-        if self.water < self.maxWater and self.halfWaterThreshold == False:
-            self.halfWaterThreshold = True
-            self.lowWater()
+        #if self.water < self.maxWater and self.halfWaterThreshold == False:
+            #self.halfWaterThreshold = True
+            #self.lowWater()
