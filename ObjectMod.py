@@ -1,9 +1,10 @@
 import libtcodpy as libtcod
+import time
 #has to do with not not completing roguelite
 class Object:
     #this is a generic object: the player, a monster, an item, the stairs...
     #it's always represented by a character on screen.
-    def __init__(self, x, y, char):
+    def __init__(self, x, y, char, onUpdate = lambda: None):
         self.x = x
         self.y = y
         self.char = char
@@ -11,7 +12,7 @@ class Object:
         #self.fadedColor = color - libtcod.dark_gray
         self.lastX = self.x
         self.lastY = self.y
-
+        self.onUpdate = onUpdate
     def move(self, dx, dy, map):
         #move by the given amount, if the destination is not blocked
         if not map[self.x + dx][self.y + dy].blocked:
@@ -19,12 +20,23 @@ class Object:
             self.y += dy
 
     def update(self):
+        self.onUpdate()
         return True
 
     def follow(self, target, map):
         if (self.x != target.x or self.y != target.y):
             dx = target.x - self.x
             dy = target.y - self.y
+            if (dx) : dx = dx / abs(dx)
+            if (dy) : dy = dy / abs(dy)
+            self.move(dx, dy, map)
+
+    def avoid(self, target, map):
+        from math import sqrt
+        distance = sqrt((self.x - target.x)**2 + (self.y - target.y)**2)
+        if(distance < 6):
+            dx = self.x - target.x
+            dy = self.y - target.y
             if (dx) : dx = dx / abs(dx)
             if (dy) : dy = dy / abs(dy)
             self.move(dx, dy, map)
