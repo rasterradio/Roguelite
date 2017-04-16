@@ -35,4 +35,4 @@ class Combatant(Object):
         Object.update(self)
         #if self.water < self.maxWater and self.halfWaterThreshold == False:
             #self.halfWaterThreshold = True
-            #self.lowWater()
+        self.lowWater()

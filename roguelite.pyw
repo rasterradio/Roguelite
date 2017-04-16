@@ -235,7 +235,7 @@ def intro():
         libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 5, libtcod.BKGND_NONE, libtcod.CENTER, "Created by Wilson Hodgson and Ian Colquhoun")
     libtcod.console_flush()
 
-def ending():                                                                
+def ending():
     game_state = 'dead'
     libtcod.console_clear(0)
     libtcod.console_print_ex(0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 5, libtcod.BKGND_NONE, libtcod.CENTER, "END")
@@ -259,7 +259,7 @@ def make_object_map(objects):
                         objects.append(Object(x, y, char))
                 x += 1
         x = 0
-        y += 1                                                                                                                                          
+        y += 1
 
     omap_data.close()
 
@@ -318,10 +318,16 @@ def handleLowWater():
             if player.water == 20:
                 shootPony = Script("shoot", "You close your eyes. She gets the easy way out.", ponyDead())
                 resistPony = Script("resist", "Can't spare the bullet. You spur her forward.")
-                ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.", lambda: None, {shootPony.name:shootPony, resistPony.name:resistPony})
+                ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.")
+                ponyThirst.connect(shootPony)
+                ponyThirst.connect(resistPony)
+                ponyThirst.messages = MessageLog()
                 ponyThirst.run(ponyThirst.messages)
+
             if player.water == 10:
                 leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on. You leave her where she falls.", ponyDead())
+                leavePony.messages = MessageLog()
+                leavePony.run(leavePony.messages)
 
 def enemySpawn():
     nearest = getNearest(player, objects)
@@ -331,7 +337,7 @@ def enemySpawn():
     print(nearest.x)
     print(nearest.y)
     print(" ")
-    
+
     if distanceToNearest > 4 and randint(0,10)==10 :
         print("distance greater and rand hit")
         distanceFromPlayer = randint(0,1)
@@ -340,7 +346,7 @@ def enemySpawn():
         enemyX = player.x + distanceFromPlayer
         enemyY = player.y + distanceFromPlayer
         enemy = Combatant(enemyX, enemyY, '&', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
-        def onUpdate() : 
+        def onUpdate() :
             if (steps % 2 == 0): enemy.avoid(player, map)
             if(enemy.x == player.x and enemy.y == player.y):
                 objects.remove(enemy)
