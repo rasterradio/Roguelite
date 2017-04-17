@@ -48,16 +48,17 @@ class Script:
             #render the sceen
             self.event()
             if self.scripts:
+                messages.display("\n")
                 for scr in self.scripts.values():
                     messages.display(scr.name)
                     
-            messages.display("\nBack")
+            messages.display("\nLeave")
 
             messages.display("\n")
 
             self.getChoice(messages)
 
-            if self.choice.lower() == "back" and self.breakable:
+            if self.choice.lower() == "leave" and self.breakable:
                 os.system('CLS')
                 messages.display("------ROJO-------")
                 messages.reset()
