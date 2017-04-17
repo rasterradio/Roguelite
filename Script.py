@@ -15,7 +15,7 @@ class Script:
 
     def getChoice(self, messages):
         self.choice = messages.get_console_input()
-
+        print(self.choice)
         if not self.scripts:
             return False
         if not self.scripts.keys():
@@ -50,13 +50,14 @@ class Script:
             if self.scripts:
                 for scr in self.scripts.values():
                     messages.display(scr.name)
-                    messages.display("\nBack")
+                    
+            messages.display("\nBack")
 
             messages.display("\n")
 
             self.getChoice(messages)
 
-            if self.choice.lower() == "Back" and self.breakable:
+            if self.choice.lower() == "back" and self.breakable:
                 os.system('CLS')
                 messages.display("------ROJO-------")
                 messages.reset()
