@@ -69,9 +69,8 @@ class MessageLog:
 
         libtcod.mouse_show_cursor(True)
         while (True):
-            libtcod.sys_check_for_event(libtcod.EVENT_MOUSE,None,mouse)
+            libtcod.EVENT_KEY_PRESS|libtcod.sys_check_for_event(libtcod.EVENT_MOUSE,key,mouse)
             mouseStat = mouse
-
             if(mouseStat.lbutton_pressed):
                 for element in self.messages:
                     for i in range(element.getHeight()):
@@ -79,7 +78,7 @@ class MessageLog:
                             return element.lines[i]
 
             instr = key
-            if instr.vk == libtcod.KEY_NONE:
+            if instr.vk != libtcod.KEY_NONE:
                 continue
 
             for i in range(MessageLog.SCREEN_WIDTH):

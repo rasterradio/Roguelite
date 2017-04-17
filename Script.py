@@ -50,7 +50,7 @@ class Script:
             if self.scripts:
                 for scr in self.scripts.values():
                     messages.display(scr.name)
-                    messages.display("Back")
+                    messages.display("\nBack")
 
             messages.display("\n")
 

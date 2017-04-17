@@ -313,7 +313,6 @@ def handleSeeGun():
     print("")
 
 def handleLowWater():
-    script.messages = MessageLog()
     if player.maxWater == 40:
             if player.water == 20:
                 shootPony = Script("shoot", "You close your eyes. She gets the easy way out.", ponyDead())
@@ -322,7 +321,6 @@ def handleLowWater():
                 ponyThirst.connect(shootPony)
                 ponyThirst.connect(resistPony)
                 ponyThirst.messages = MessageLog()
-                ponythirst.breakable = False
                 ponyThirst.run(ponyThirst.messages)
 
             if player.water == 10:
@@ -385,9 +383,9 @@ def ponyDead():
 
 player = Combatant(10, 20, '@', 10, 2, 2, True, handleLow, handleLowAmmo, handleSeeGun, 10, 20, handleLowWater)
 
-houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.\n[Press '/' to leave]", refillWater)
-houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n[Press '/' to leave]", lightSleep)
-houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.\n[Press '/' to leave]", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
+houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last twelve days in the wild.", refillWater)
+houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n", lightSleep)
+houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
 houseAttack = Script("Attack", "", handleCombat)
 houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.", lambda: None, {houseAttack.name:houseAttack})
 if player.hp < 10 and player.hp > 0:
