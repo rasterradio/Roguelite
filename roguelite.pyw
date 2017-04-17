@@ -344,10 +344,11 @@ def enemySpawn():
         distanceFromPlayer = distanceFromPlayer*4
         enemyX = player.x + distanceFromPlayer
         enemyY = player.y + distanceFromPlayer
-        enemy = Combatant(enemyX, enemyY, '&', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
+        enemy = Combatant(enemyX, enemyY, '&', 10, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
         def onUpdate() :
             if (steps % 2 == 0): enemy.avoid(player, map)
             if(enemy.x == player.x and enemy.y == player.y):
+                Combat(player, enemy, con)
                 objects.remove(enemy)
         enemy.onUpdate = onUpdate
         return enemy

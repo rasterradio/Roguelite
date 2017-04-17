@@ -12,7 +12,7 @@ class Landmark(Object):
 
     def update(self):
         for obj in self.objects:
-            if Object.collide(self, obj):
+            if Object.collide(self, obj) and obj.char == '@':
                 #run event if available
                 self.event.messages = MessageLog()
                 self.event.run(self.messages)

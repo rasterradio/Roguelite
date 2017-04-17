@@ -51,7 +51,8 @@ class Script:
                 for scr in self.scripts.values():
                     messages.display(scr.name)
                     
-            messages.display("\nBack")
+            if self.breakable :
+                messages.display("\nBack")
 
             messages.display("\n")
 

@@ -53,9 +53,9 @@ class Combat:
                 messages.display( "Fist")
                 messages.display( "Gun")
                 messages.display( "Escape")
-                messages.display( "")
+                messages.display( "\n")
 
-                player_choice = messages.get_console_input()
+                player_choice = messages.get_console_input().lower()
                 if player_choice == "fist":
                     if myself.cocked == True:
                         myself.cocked = False
