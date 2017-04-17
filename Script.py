@@ -52,7 +52,9 @@ class Script:
                 for scr in self.scripts.values():
                     messages.display(scr.name)
                     
-            messages.display("\nLeave")
+            if self.breakable :
+                messages.display("\nLeave")
+
 
             messages.display("\n")
 

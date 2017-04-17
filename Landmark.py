@@ -3,7 +3,7 @@ from HelperFunctions import MessageLog
 
 class Landmark(Object):
     #a location on the map that you can enter
-    def __init__(self, x, y, char, name, objects, event):
+    def __init__(self, x, y, char, name = "", objects = [], event = lambda:None):
         Object.__init__(self, x, y, char)
         self.name = name
         self.objects = objects
@@ -12,7 +12,7 @@ class Landmark(Object):
 
     def update(self):
         for obj in self.objects:
-            if Object.collide(self, obj):
+            if Object.collide(self, obj) and obj.char == '@':
                 #run event if available
                 self.event.messages = MessageLog()
                 self.event.run(self.messages)

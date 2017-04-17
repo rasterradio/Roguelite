@@ -20,7 +20,7 @@ from Combatant import *
 #actual size of the window
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
-
+global player
 #variables for GUI
 BAR_WIDTH = 20
 PANEL_HEIGHT = 1
@@ -31,10 +31,12 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = False  #light walls or not
-LIGHT_RADIUS = 50
+LIGHT_RADIUS = 10
 
 VIEWSTATE = "ascii"
 steps = 0
+global pony
+pony = False
 global enemyEncounter
 enemyEncounter = False
 color_dark_wall = libtcod.Color(0, 0, 100)
@@ -185,30 +187,42 @@ def handle_keys():
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
             player.move(0, -1, map)
             fov_recompute = True
-            #if player.x == town.x and player.y == town.y or player.x == town1 and player.y == town1.y:
-            player.water-=1
+            global pony
+            if pony:
+                player.water-=2
+            else:
+                player.water-=1
 
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
             player.move(0, 1, map)
             fov_recompute = True
-            player.water-=1
+            global pony
+            if pony:
+                player.water-=2
+            else:
+                player.water-=1
 
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
             player.move(-1, 0, map)
             fov_recompute = True
-            player.water-=1
+            global pony
+            if pony:
+                player.water-=2
+            else:
+                player.water-=1
 
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
             player.move(1, 0, map)
             fov_recompute = True
-            if player.maxWater == 40:
+            global pony
+            if pony:
                 player.water-=2
             else:
                 player.water-=1
 
         #enable for thirst mechanic
-        #if player.water == 0:
-            #player_death(player)
+        if player.water == 0:
+            player_death(player)
 
 def player_death(player):
     global game_state
@@ -299,7 +313,6 @@ libtcod.console_set_custom_font('lucida10x10_gs_tc.png', libtcod.FONT_TYPE_GREYS
 libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'VAGRANT', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
-pony = False
 
 def handleLow():
     return None
@@ -312,16 +325,18 @@ def handleSeeGun():
 
 def handleLowWater():
     if player.maxWater == 40:
-            if player.water == 20:
-                shootPony = Script("Shoot", "You kept your eyes closed and tried to drown out the sound.\nYou saddle her gear and carry on.", ponyDead)
+            if player.water == 20 and pony:
+                shootPony = Script("Shoot", "You keep your eyes closed and tried to drown out the sound.\nYou saddle her gear and carry on.", ponyDead)
                 resistPony = Script("Carry on", "Can't spare the bullet. You spur her forward.")
                 ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths. There is not enough water for the two of you.")
                 ponyThirst.connect(shootPony)
                 ponyThirst.connect(resistPony)
                 ponyThirst.messages = MessageLog()
+                ponyThirst.breakable = False
                 ponyThirst.run(ponyThirst.messages)
-
-            if player.water == 10:
+            
+            global pony
+            if player.water == 10 and pony:
                 leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on.\nOn foot, you turn to see her being covered by the sandy wind.", ponyDead)
                 leavePony.messages = MessageLog()
                 leavePony.run(leavePony.messages)
@@ -343,14 +358,20 @@ def enemySpawn():
         distanceFromPlayer = distanceFromPlayer*4
         enemyX = player.x + distanceFromPlayer
         enemyY = player.y + distanceFromPlayer
-        enemy = Combatant(enemyX, enemyY, '&', 10, 1, 3, True, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
+        enemy = Combatant(enemyX, enemyY, '&', 10, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 3, 10, lambda:None)
         def onUpdate() :
-            if (steps % 3 == 0): enemy.avoid(player, map)
+            if (steps % 4 == 0): enemy.avoid(player, map)
             if(enemy.x == player.x and enemy.y == player.y):
+                Combat(player, enemy, con)
+                player.water += 25
+                player.maxWater = 40
+                deadMan = Object(player.x, player.y, '&')
+                objects.append(deadMan)
                 objects.remove(enemy)
         enemy.onUpdate = onUpdate
         global enemyEncounter
         enemyEncounter = False
+    
         return enemy
 
 def handleCombat():
@@ -361,7 +382,7 @@ def refillWater():
     player.water = player.maxWater
 
 def refillPartialWater():
-    player.water = 9
+    player.water = 14
 
 def lightSleep():
     if player.hp >= 10:
@@ -379,15 +400,24 @@ def handleEnding():
     ending()
 
 def boughtPony():
+    global pony
     pony = True
     player.maxWater = 40
 
 def ponyDead():
+    global pony
     pony = False
+    global player
+    player.bullets-=1
+    deadPony = Object(player.x, player.y, 'h')
+    objects.append(deadPony)
 
-player = Combatant(10, 20, '@', 10, 2, 2, True, handleLow, handleLowAmmo, handleSeeGun, 10, 20, handleLowWater)
+player = Combatant(10, 20, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 20, handleLowWater)
 
-dryWellWater = Script("Drink", "You filter a small pool of water from the dark mud.", refillPartialWater)
+death = Script("Die", "END", handleEnding)
+dryWellWater = Script("Drink", "You filter a small pool of water from the dark mud.\nBut it isn't enough to satisfy your thirst.", handleEnding)
+dryWellWater.breakable = False
+dryWellWater.connect(death)
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last several days in the wild.", refillWater)
 houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n", lightSleep)
 houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
@@ -404,8 +434,8 @@ discoverHouse3 = Script("Leave", "A clay hut with a straw roof, surrounded by a 
 discoverHouse4 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda: None, {houseEnemySearch.name:houseEnemySearch})
 
 townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough there to last twelve days in the wild.", refillWater)
-townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.", deepSleep)
-townSafe = Script("", "You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.", lambda: None, {houseWater.name:townWater, houseSleep.name:townSleep})
+#townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.", deepSleep)
+#townSafe = Script("", "You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.", lambda: None, {houseWater.name:townWater, houseSleep.name:townSleep})
 
 #discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while\nnuns shovel hay. The wooden cross has been covered by a Falangist banner.", lambda: None, {townEnemy.name:townEnemy})
 #discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
@@ -413,7 +443,7 @@ discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in re
 
 buyPony = Script("Purchase", "You load the horse with bags and lead her back into the market.\nA strong back means extra space to carry water.", boughtPony)
 townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony})#, discoverTown.name:discoverTown})
-discoverTown = Script("Return", "You step into a bazaar. Women balance pots on their heads and children push\nthrough the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater, townSleep.name:townSleep})
+discoverTown = Script("Return", "You step into a bazaar. Women balance pots on their heads and children push\nthrough the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater})
 
 discoverWell = Script("Well", "A well. The earth has cracked and dried against the clay ridge.", lambda:None, {houseWater.name:houseWater})
 discoverWell2 = Script("Well", "The stones around the well have been burned and bashed,\nleaking sunlight into its basin.")
@@ -423,9 +453,13 @@ discoverWell2.connect(dryWellWater)
 def setEncounter():
     global enemyEncounter
     enemyEncounter = True
-caveWake = Script("Wake", "You jump out of sleep. Your flask is gone. A figure is running over a dune.", setEncounter)
+    global player
+    player.maxWater = 20
+    player.water = 20
+caveWake = Script("Wake", "You jump out of sleep. Your gourd and supplies are gone. Only your waterskin remains.\nA figure is running over a dune.", setEncounter)
 caveSleep = Script("Sleep", "You tune out the howling of the wind and drift off.")
-caveWater = Script("Drink", "You pool together some moisure in your hands and transfer it to your flask.", refillPartialWater)
+caveSleep.breakable = False
+caveWater = Script("Drink", "You pool together some moisture in your hands\nand transfer it to your flask.", refillWater)
 discoverCave = Script("Return", "The wind grows fierce. You take shelter in the cave for the night.")
 discoverCave.connect(caveWater)
 discoverCave.connect(caveSleep)
@@ -434,7 +468,7 @@ caveSleep.connect(caveWake)
 
 town = Landmark(34, 23, 'T', "Town", [player], discoverTown)
 well = Landmark(18, 21, 'W', "Well", [player], discoverWell)
-well2 = Landmark(60, 14, 'W', "Well", [player], discoverWell2)
+well2 = Landmark(65, 14, 'W', "Well", [player], discoverWell2)
 cave = Landmark(50, 15, 'C', "Cave", [player], discoverCave)
 
 #house = Landmark(39, 21, 'H', "House", [player], discoverHouse1)

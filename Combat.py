@@ -44,18 +44,18 @@ class Combat:
                 enemy_result = ""
 
             if myself.stagger == False:
-                messages.display("------STATS------\n")
+                messages.display("------STATS------\n\n")
                 messages.display(("Bullets = " + str(myself.bullets)))
-                messages.display( "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n" )
-                messages.display( "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n")
-                messages.display( "Enemy stagger = " + str(enemy_choice) + "\n")
-                messages.display( "-----OPTIONS-----\n")
+                messages.display( "Health = " + str(myself.hp) + "/" + str(myself.maxHp) + "\n\n" )
+                #messages.display( "Enemy health = " + str(enemy.hp) + "/" + str(enemy.maxHp) + "\n")
+                #messages.display( "Enemy stagger = " + str(enemy_choice) + "\n")
+                messages.display( "-----OPTIONS-----\n\n")
                 messages.display( "Fist")
                 messages.display( "Gun")
                 messages.display( "Escape")
-                messages.display( "")
+                messages.display( "\n\n")
 
-                player_choice = messages.get_console_input()
+                player_choice = messages.get_console_input().lower()
                 if player_choice == "fist":
                     if myself.cocked == True:
                         myself.cocked = False
