@@ -53,12 +53,7 @@ class Script:
                     messages.display(scr.name)
                     
             if self.breakable :
-<<<<<<< HEAD
                 messages.display("\nLeave")
-
-=======
-                messages.display("\nBack")
->>>>>>> 59161cbf85544ab3b9ccdfd70dc9b156d99cbe42
 
             messages.display("\n")
 
