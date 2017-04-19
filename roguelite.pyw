@@ -363,10 +363,13 @@ def enemySpawn():
             if (steps % 4 == 0): enemy.avoid(player, map)
             if(enemy.x == player.x and enemy.y == player.y):
                 Combat(player, enemy, con)
+<<<<<<< HEAD
                 player.water += 25
                 player.maxWater = 40
                 deadMan = Object(player.x, player.y, '&')
                 objects.append(deadMan)
+=======
+>>>>>>> 59161cbf85544ab3b9ccdfd70dc9b156d99cbe42
                 objects.remove(enemy)
         enemy.onUpdate = onUpdate
         global enemyEncounter
