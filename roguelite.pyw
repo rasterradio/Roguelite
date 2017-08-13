@@ -334,7 +334,7 @@ def handleLowWater():
                 ponyThirst.messages = MessageLog()
                 ponyThirst.breakable = False
                 ponyThirst.run(ponyThirst.messages)
-            
+
             global pony
             if player.water == 10 and pony:
                 leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on.\nOn foot, you turn to see her being covered by the sandy wind.", ponyDead)
@@ -371,7 +371,7 @@ def enemySpawn():
         enemy.onUpdate = onUpdate
         global enemyEncounter
         enemyEncounter = False
-    
+
         return enemy
 
 def handleCombat():
@@ -403,12 +403,14 @@ def boughtPony():
     global pony
     pony = True
     player.maxWater = 40
+    player.char = 'h'
 
 def ponyDead():
     global pony
     pony = False
     global player
     player.bullets-=1
+    player.char = '@'
     deadPony = Object(player.x, player.y, 'h')
     objects.append(deadPony)
 
