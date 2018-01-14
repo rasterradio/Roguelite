@@ -15,15 +15,16 @@ class Script:
     conditions = {}
 
     def __init__(self, name=None, data=None, event=lambda:None, scripts=None, breakable=True, requirements = None):
-        self.name = name
-        self.data = data
-        self.scripts = scripts
-        self.event = event
-        self.choice = "DEFAULT"
-        self.breakable = breakable
-        self.requirements = requirements
-        for r in requirements:
-            conditions[r.name] = r.state
+		self.name = name
+		self.data = data
+		self.scripts = scripts
+		self.event = event
+		self.choice = "DEFAULT"
+		self.breakable = breakable
+		self.requirements = requirements
+		if not requirements == None:
+			for r in requirements:
+				conditions[r.name] = r.state
 
     def __str__(self):
         return str(self.name)
@@ -41,14 +42,16 @@ class Script:
         return False
 
     def checkAllRequirements(self, giveReason = False):
-        meetAll = True
-
-        for r in self.requirements:
-            meetAll = meetAll and conditions[r.name]
-            if giveReason and not conditions[r.name]:
-                messages.display(r.failResponse)
-                messages.display("")
-        return meetAll
+		meetAll = True
+		
+		if not self.requirements == None:
+			for r in self.requirements:
+				meetAll = meetAll and conditions[r.name]
+				if giveReason and not conditions[r.name]:
+					messages.display(r.failResponse)
+					messages.display("")
+		
+		return meetAll
 
     def connect(self, toConnect):
         if isinstance(toConnect, Script):
@@ -63,6 +66,10 @@ class Script:
             else:
                 self.scripts = toConnect
 
+    def disconnect(self, n):
+        self.scripts.pop(n, 0)
+				
+				
     def run(self, messages):
         self.choice = "DEFAULT"
         while True:

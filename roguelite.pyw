@@ -221,7 +221,7 @@ def handle_keys():
                 player.water-=1
 
         #enable for thirst mechanic
-        if player.water == 0:
+        if player.water <= 0 and VIEWSTATE == "ascii":
             player_death(player)
 
 def player_death(player):
