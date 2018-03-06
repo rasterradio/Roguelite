@@ -93,7 +93,7 @@ class Script:
 
             if self.choice.lower() == "leave" and self.breakable:
                 os.system('CLS')
-                messages.display("------ROJO-------")
+                #messages.display("-----VAGRANT-----")
                 messages.reset()
                 break
 
@@ -101,5 +101,5 @@ class Script:
                 for y in self.scripts.keys():
                     if self.choice.lower() == y.lower() and self.scripts.get(y).checkAllRequirements():
                         self = self.scripts.get(y)
-                    else:
-                        messages.display("Unavailable Choice")
+                    #else:
+                        #messages.display("Unavailable Choice")

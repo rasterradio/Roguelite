@@ -1,0 +1,7 @@
+- player can walk on landmark with 0 water and drink, only to die of thirst as they leave. Landmark visiting shouldn't cost a water (maybe Wilson can do this? He coded the landmarks, after all)
+
+- can buy horse multiple times
+
+- can't return to town while on a horse
+
+- shouldn't be able to return to the cave after the encounter is set
