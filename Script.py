@@ -24,7 +24,7 @@ class Script:
 		self.requirements = requirements
 		if not requirements == None:
 			for r in requirements:
-				conditions[r.name] = r.state
+				Script.conditions[r.name] = r.state
 
     def __str__(self):
         return str(self.name)
@@ -46,8 +46,8 @@ class Script:
 		
 		if not self.requirements == None:
 			for r in self.requirements:
-				meetAll = meetAll and conditions[r.name]
-				if giveReason and not conditions[r.name]:
+				meetAll = meetAll and Script.conditions[r.name]
+				if giveReason and not Script.conditions[r.name]:
 					messages.display(r.failResponse)
 					messages.display("")
 		
@@ -101,5 +101,5 @@ class Script:
                 for y in self.scripts.keys():
                     if self.choice.lower() == y.lower() and self.scripts.get(y).checkAllRequirements():
                         self = self.scripts.get(y)
-                    #else:
-                        #messages.display("Unavailable Choice")
+                    else:
+                        messages.display("Unavailable Choice")

@@ -35,8 +35,8 @@ LIGHT_RADIUS = 10
 
 VIEWSTATE = "ascii"
 steps = 0
-global pony
-pony = False
+global noPony
+noPony = True
 global enemyEncounter
 enemyEncounter = False
 color_dark_wall = libtcod.Color(0, 0, 100)
@@ -183,8 +183,8 @@ def handle_keys():
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
             player.move(0, -1, map)
             fov_recompute = True
-            global pony
-            if pony:
+            global noPony
+            if noPony == False:
                 player.water-=2
             else:
                 player.water-=1
@@ -192,8 +192,8 @@ def handle_keys():
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
             player.move(0, 1, map)
             fov_recompute = True
-            global pony
-            if pony:
+            global noPony
+            if noPony == False:
                 player.water-=2
             else:
                 player.water-=1
@@ -201,8 +201,8 @@ def handle_keys():
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
             player.move(-1, 0, map)
             fov_recompute = True
-            global pony
-            if pony:
+            global noPony
+            if noPony == False:
                 player.water-=2
             else:
                 player.water-=1
@@ -210,8 +210,8 @@ def handle_keys():
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
             player.move(1, 0, map)
             fov_recompute = True
-            global pony
-            if pony:
+            global noPony
+            if noPony == False:
                 player.water-=2
             else:
                 player.water-=1
@@ -309,6 +309,8 @@ libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'VAGRANT', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
+noPony = Condition("PonyCondition", False, "")
+
 def handleLow():
     return None
 
@@ -320,7 +322,7 @@ def handleSeeGun():
 
 def handleLowWater():
     if player.maxWater == 40:
-            if player.water == 20 and pony:
+            if player.water == 20 and noPony == False:
                 shootPony = Script("Shoot", "You keep your eyes closed and try to drown out the sound.\nYou saddle her gear and carry on.", ponyDead)
                 resistPony = Script("Carry on", "Can't spare the bullet. You spur her forward.")
                 ponyThirst = Script("ponyThirst", "The pony moves in ragged breaths.\nThere is not enough water for the two of you.")
@@ -331,7 +333,7 @@ def handleLowWater():
                 ponyThirst.run(ponyThirst.messages)
 
             global pony
-            if player.water == 10 and pony:
+            if player.water == 10 and noPony == False:
                 leavePony = Script("leavePony", "The pony falls to her knees. She cannot go on.\nOn foot, you turn to see her being covered by the sand and wind.", ponyDead)
                 leavePony.messages = MessageLog()
                 leavePony.run(leavePony.messages)
@@ -394,14 +396,14 @@ def handleEnding():
     ending()
 
 def boughtPony():
-    global pony
-    pony = True
+    global noPony
+    Script.conditions[noPony.name] = False
     player.maxWater = 40
     player.char = 'h'
 
 def ponyDead():
-    global pony
-    pony = False
+    global noPony
+    Script.conditions[noPony.name] = True
     global player
     player.bullets-=1
     player.char = '@'
@@ -444,8 +446,9 @@ townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enou
 #discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
 #discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
 
+#NullScript = Script(name=None, data=None, event=lambda:None,  scripts=None, breakable=True, requirements = {pony = True})
 buyPony = Script("Purchase", "You load the horse with bags and lead her back into the market.\nA strong back means extra space to carry water.", boughtPony)
-townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony})#, discoverTown.name:discoverTown})
+townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony}, True, {noPony})
 discoverTown = Script("Return", "You step into a bazaar. Women balance pots on their heads and children push\nthrough the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater})
 
 discoverWell = Script("Well", "A well. The earth has cracked and dried against the clay ridge.", lambda:None, {houseWater.name:houseWater})
