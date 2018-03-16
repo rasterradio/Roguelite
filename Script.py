@@ -101,5 +101,5 @@ class Script:
                 for y in self.scripts.keys():
                     if self.choice.lower() == y.lower() and self.scripts.get(y).checkAllRequirements():
                         self = self.scripts.get(y)
-                    else:
+                    elif self.choice.lower() == y.lower() and not(self.scripts.get(y).checkAllRequirements()):
                         messages.display("Unavailable Choice")

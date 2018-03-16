@@ -36,7 +36,6 @@ LIGHT_RADIUS = 10
 VIEWSTATE = "ascii"
 steps = 0
 global noPony
-noPony = True
 global enemyEncounter
 enemyEncounter = False
 color_dark_wall = libtcod.Color(0, 0, 100)
@@ -183,7 +182,6 @@ def handle_keys():
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
             player.move(0, -1, map)
             fov_recompute = True
-            global noPony
             if noPony == False:
                 player.water-=2
             else:
@@ -192,7 +190,6 @@ def handle_keys():
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
             player.move(0, 1, map)
             fov_recompute = True
-            global noPony
             if noPony == False:
                 player.water-=2
             else:
@@ -201,7 +198,6 @@ def handle_keys():
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
             player.move(-1, 0, map)
             fov_recompute = True
-            global noPony
             if noPony == False:
                 player.water-=2
             else:
@@ -210,7 +206,6 @@ def handle_keys():
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
             player.move(1, 0, map)
             fov_recompute = True
-            global noPony
             if noPony == False:
                 player.water-=2
             else:
@@ -309,7 +304,7 @@ libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'VAGRANT', False)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
-noPony = Condition("PonyCondition", False, "")
+noPony = Condition("PonyCondition", True, "")
 
 def handleLow():
     return None
@@ -396,13 +391,11 @@ def handleEnding():
     ending()
 
 def boughtPony():
-    global noPony
     Script.conditions[noPony.name] = False
     player.maxWater = 40
     player.char = 'h'
 
 def ponyDead():
-    global noPony
     Script.conditions[noPony.name] = True
     global player
     player.bullets-=1
