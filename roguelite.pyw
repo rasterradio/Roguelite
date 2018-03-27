@@ -36,8 +36,8 @@ LIGHT_RADIUS = 10
 VIEWSTATE = "ascii"
 steps = 0
 global noPony
-global enemyEncounter
-enemyEncounter = False
+global noCave
+enemyEncounter = True
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
@@ -212,8 +212,8 @@ def handle_keys():
                 player.water-=1
 
         #enable for thirst mechanic
-        #if player.water <= 0 and VIEWSTATE == "ascii":
-            #player_death(player)
+        if player.water <= 0 and VIEWSTATE == "ascii":
+            player_death(player)
 
 def player_death(player):
     global game_state
@@ -305,6 +305,7 @@ con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
 noPony = Condition("PonyCondition", True, "")
+noCave = Condition("CaveCondition", True, "")
 
 def handleLow():
     return None
@@ -336,14 +337,9 @@ def handleLowWater():
 def enemySpawn():
     nearest = getNearest(player, objects)
     distanceToNearest = sqrt((player.x - nearest.x)**2 + (player.y - nearest.y)**2)
-    #print(nearest.char)
-    #print(" ")
-    #print(nearest.x)
-    #print(nearest.y)
-    #print(" ")
+    global enemyEncounter
 
     if enemyEncounter == True :
-        #print("distance greater and rand hit")
         distanceFromPlayer = randint(0,1)
         if distanceFromPlayer == 0 : distanceFromPlayer -= 1
         distanceFromPlayer = distanceFromPlayer*4
@@ -360,7 +356,6 @@ def enemySpawn():
                 objects.append(deadMan)
                 objects.remove(enemy)
         enemy.onUpdate = onUpdate
-        global enemyEncounter
         enemyEncounter = False
 
         return enemy
@@ -402,13 +397,16 @@ def ponyDead():
     player.char = '@'
     deadPony = Object(player.x, player.y, 'h')
     objects.append(deadPony)
-	
+    
 def setEncounter():
     global enemyEncounter
     enemyEncounter = True
+    Script.conditions[noCave.name] = False
     global player
     player.maxWater = 20
-    #player.water = 20
+    loui = enemySpawn()
+    if loui != None:
+        objects.append(loui)    
 
 player = Combatant(10, 20, '@', 10, 2, 3, True, handleLow, handleLowAmmo, handleSeeGun, 10, 20, handleLowWater)
 
@@ -417,29 +415,13 @@ dryWellWater = Script("Drink", "You filter a small pool of water from the dark m
 dryWellWater.breakable = False
 dryWellWater.connect(death)
 houseWater = Script("Drink", "You draw water from the well.\nThere's enough in the waterskin to last several days in the wild.", refillWater)
-#houseSleep = Script("Sleep", "You take shelter for the night.\nProtection from the elements helps to heal shallow wounds.\n", lightSleep)
-#houseSafeSearch = Script("Enter", "A quick search through the house shows it to be ransacked.\nBut there is still some water in the well and a cot upstairs.", lambda: None, {houseWater.name:houseWater, houseSleep.name:houseSleep})
-#houseAttack = Script("Attack", "", handleCombat)
-#houseEnemySearch = Script("Search", "Peeking into the den, you find a young man in uniform burning books\nto make a fire.\nHe turns around and grits his teeth. Mira, es un poco Rojo.", lambda: None, {houseAttack.name:houseAttack})
 if player.hp < 10 and player.hp > 0:
     houseWater.scripts = {houseSleep.name:houseSleep}
 if player.water < 10 and player.water > 0:
     houseSleep.scripts = {houseWater.name:houseWater}
 
-#discoverHouse1 = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", lambda: None, {houseSafeSearch.name:houseSafeSearch})
-#discoverHouse2 = Script("Leave", "An old house sets on the hill, the paint yellowed and flaking.\nThe door hangs open.", lambda: None, {houseEnemySearch.name:houseEnemySearch})
-#discoverHouse3 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda:None, {houseSafeSearch.name:houseSafeSearch})
-#discoverHouse4 = Script("Leave", "A clay hut with a straw roof, surrounded by a stone fence.\nNo light comes from inside.", lambda: None, {houseEnemySearch.name:houseEnemySearch})
-
 townWater = Script("Drink", "You dip your waterskin into the well.\nThere's enough to last several days in the wild.", refillWater)
-#townSleep = Script("Sleep", "You spend the night at an inn.\nThe good food and warm bed help heal old wounds.", deepSleep)
-#townSafe = Script("", "You step out of the alley and back into the street.\nPeople crowd aroud a well, filling buckets. An inn sits across the mercado.", lambda: None, {houseWater.name:townWater, houseSleep.name:townSleep})
 
-#discoverTown1 = Script("Leave", "A crumbling parish. Young boys kick a ball aroud the courtyard while\nnuns shovel hay. The wooden cross has been covered by a Falangist banner.", lambda: None, {townEnemy.name:townEnemy})
-#discoverTown2 = Script("Leave", "A small community of farmers. Trucks circle the town and soldiers are stationed\noutside of clay huts. Staying here could be dangerous.", lambda: None, {townEnemy.name:townEnemy})
-#discoverBorder = Script("Sanctuary", "A large set of iron gates. A soldier in red greets you and motions to the others.\nThe gates open.", handleEnding)
-
-#NullScript = Script(name=None, data=None, event=lambda:None,  scripts=None, breakable=True, requirements = {pony = True})
 buyPony = Script("Purchase", "You load the horse with bags and lead her back into the market.\nA strong back means extra space to carry water.", boughtPony)
 townPony = Script("Shop", "A man guides you into a large, smoky tent. He has horses for sale.", lambda:None, {buyPony.name:buyPony}, True, {noPony})
 discoverTown = Script("Return", "You step into a bazaar. Women balance pots on their heads and children push\nthrough the crowd.", lambda:None, {townPony.name:townPony, townWater.name:townWater})
@@ -448,77 +430,29 @@ discoverWell = Script("Well", "A well. The earth has cracked and dried against t
 discoverWell2 = Script("Well", "The stones around the well have been burned and bashed,\nleaking sunlight into its neck.")
 discoverWell2.connect(dryWellWater)
 
-
-caveWake = Script("Wake", "You jump out of sleep. Your gourd and supplies are gone.\nOnly your waterskin remains.Under the moonlight, a figure dissapears over a dune.")#, setEncounter)
-caveSleep = Script("Sleep", "You tune out the howling of the wind and drift off.")
+discoverCave = Script("Explore", "The wind grows fierce. You take shelter in the cave for the night.", lambda:None, None, False, {noCave})
+caveWake = Script("Wake", "You jump out of sleep. Your gourd and supplies are gone.\nOnly your waterskin remains.\nUnder the moonlight, a figure disappears over a dune.",lambda:None, None, True)
+caveSleep = Script("Sleep", "You tune out the howling of the wind and drift off.", setEncounter)
 caveSleep.breakable = False
 caveWater = Script("Drink", "You pool together some moisture in your hands\nand transfer it from the wet rock floor to your flask.", refillWater)
 caveWater.breakable = False
-discoverCave = Script("Return", "The wind grows fierce. You take shelter in the cave for the night.", setEncounter)
 discoverCave.breakable = False
 discoverCave.connect(caveWater)
 discoverCave.connect(caveSleep)
 caveWater.connect(discoverCave)
 caveSleep.connect(caveWake)
+enterCave = Script("Return", "The cave curves over the sand, swallowing air into the darkness.")
+enterCave.connect(discoverCave)
 
 town = Landmark(34, 23, 'T', "Town", [player], discoverTown)
 well = Landmark(18, 21, 'W', "Well", [player], discoverWell)
 well2 = Landmark(65, 14, 'W', "Well", [player], discoverWell2)
-cave = Landmark(50, 15, 'C', "Cave", [player], discoverCave)
-
-#house = Landmark(39, 21, 'H', "House", [player], discoverHouse1)
-#house1 = Landmark(32, 18, 'H', "House", [player], discoverHouse4)
-#house2 = Landmark(51, 24, 'H', "House", [player], discoverHouse2)
-
-#tree= Object(17, 15, 't')
-#tree1= Object(18, 15, 't')
-#tree2= Object(19, 15, 't')
-#tree3= Object(20, 15, 't')
-#tree4= Object(21, 15, 't')
-#tree5= Object(22, 15, 't')
-#tree6= Object(23, 15, 't')
-#tree7= Object(17, 14, 't')
-#tree8= Object(18, 14, 't')
-#tree9= Object(19, 14, 't')
-#tree10= Object(20, 14, 't')
-#tree11= Object(21, 14, 't')
-#tree12= Object(22, 14, 't')
-#tree13= Object(23, 14, 't')
-#tree14= Object(18, 15, 't')
-#tree15= Object(18, 15, 't')
-#tree16= Object(18, 15, 't')
-#tree17= Object(18, 15, 't')
-#tree18= Object(18, 15, 't')
-#tree19= Object(18, 15, 't')
-#tree20= Object(18, 15, 't')
-#tree21= Object(18, 15, 't')
-#tree22= Object(18, 15, 't')
-#tree23= Object(18, 15, 't')
-#tree24= Object(18, 15, 't')
-#tree25= Object(18, 15, 't')
-#tree26= Object(18, 15, 't')
-#tree27= Object(18, 15, 't')
-#tree28= Object(18, 15, 't')
+cave = Landmark(50, 15, 'C', "Cave", [player], enterCave)
 
 npc = Combatant(-1, -1, '&', 10, 1, 0, False, handleLow, handleLowAmmo, handleSeeGun, 0, 0)
 
-#border = Landmark(35, 11, 'B', "Border", [player], discoverBorder)
-#border1 = Landmark(36, 11, 'B', "Border", [player], discoverBorder)
-#border2 = Landmark(37, 11, 'B', "Border", [player], discoverBorder)
-#border3= Landmark(38, 11, 'B', "Border", [player], discoverBorder)
-#border4= Landmark(39, 11, 'B', "Border", [player], discoverBorder)
-#border5= Landmark(40, 11, 'B', "Border", [player], discoverBorder)
-#border6= Landmark(41, 11, 'B', "Border", [player], discoverBorder)
-#border7= Landmark(42, 11, 'B', "Border", [player], discoverBorder)
-#border8= Landmark(43, 11, 'B', "Border", [player], discoverBorder)
-#border9= Landmark(44, 11, 'B', "Border", [player], discoverBorder)
-#border10= Landmark(45, 11, 'B', "Border", [player], discoverBorder)
-
 townPony.connect(discoverTown)
 buyPony.connect(discoverTown)
-
-#townAttack.connect(townSafe)
-#houseAttack.connect(houseSafeSearch)
 
 #the list of objects with those two
 objects = [player, well, town, well2, cave]
@@ -552,17 +486,11 @@ while not libtcod.console_is_window_closed():
     for object in objects:
         object.clear(con)
         object.update()
-    #well.follow(player, map)
-    loui = enemySpawn()
-    if loui != None:
-        objects.append(loui)
-        loui.follow(player, map)
     if game_state != 'dead':
         #render_all()
         render_ascii()
         libtcod.console_flush()
 
-    #objects[3].update()
     if player.x == npc.x and player.y == npc.y:
         Combat(player, npc, con)
 
