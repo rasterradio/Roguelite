@@ -6,25 +6,29 @@ class Condition:
         self.name = name
         self.state = state
         self.failResponse = failResponse
+        Script.conditions[name] = state
 
     def __str__(self):
         return str(self.failResponse)
+        
+    def __eq__(self, other):
+        return Script.conditions[self.name] == other
 
 class Script:
 
     conditions = {}
 
     def __init__(self, name=None, data=None, event=lambda:None, scripts=None, breakable=True, requirements = None):
-		self.name = name
-		self.data = data
-		self.scripts = scripts
-		self.event = event
-		self.choice = "DEFAULT"
-		self.breakable = breakable
-		self.requirements = requirements
-		if not requirements == None:
-			for r in requirements:
-				Script.conditions[r.name] = r.state
+        self.name = name
+        self.data = data
+        self.scripts = scripts
+        self.event = event
+        self.choice = "DEFAULT"
+        self.breakable = breakable
+        self.requirements = requirements
+        #if not requirements == None:
+            #for r in requirements:
+                #Script.conditions[r.name] = r.state
 
     def __str__(self):
         return str(self.name)
@@ -42,16 +46,15 @@ class Script:
         return False
 
     def checkAllRequirements(self, giveReason = False):
-		meetAll = True
-		
-		if not self.requirements == None:
-			for r in self.requirements:
-				meetAll = meetAll and Script.conditions[r.name]
-				if giveReason and not Script.conditions[r.name]:
-					messages.display(r.failResponse)
-					messages.display("")
-		
-		return meetAll
+        meetAll = True
+        
+        if not self.requirements == None:
+            for r in self.requirements:
+                meetAll = meetAll and Script.conditions[r]
+                if giveReason and not Script.conditions[r]:
+                    messages.display("Fail response")
+        
+        return meetAll
 
     def connect(self, toConnect):
         if isinstance(toConnect, Script):
@@ -68,8 +71,8 @@ class Script:
 
     def disconnect(self, n):
         self.scripts.pop(n, 0)
-				
-				
+                
+                
     def run(self, messages):
         self.choice = "DEFAULT"
         while True:
